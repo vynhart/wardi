@@ -22,7 +22,7 @@
               <img
                 v-if="entry.product.imageUrl"
                 class="cart-image"
-                :src="entry.product.imageUrl"
+                :src="toCdnUrl(entry.product.imageUrl)"
                 :alt="entry.product.name"
               />
             </div>
@@ -80,6 +80,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useCartStore } from '../stores/cart.js'
 import IconButton from '../components/IconButton.vue'
 import QtyControl from '../components/QtyControl.vue'
+import { toCdnUrl } from '../utils/storage.js'
 
 const SHIPPING = 10
 

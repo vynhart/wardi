@@ -69,6 +69,11 @@ const routes = [
     component: () => import('../pages/ProductFormPage.vue'),
     meta: { requiresSeller: true },
   },
+  {
+    path: '/:storeId/product/:productId',
+    name: 'product-detail',
+    component: () => import('../pages/ProductDetailPage.vue'),
+  },
 ]
 
 const router = createRouter({

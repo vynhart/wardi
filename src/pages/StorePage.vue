@@ -33,12 +33,13 @@
           v-for="product in filteredProducts"
           :key="product.id"
           class="product-item"
+          @click="goToDetail(product)"
         >
           <div class="product-image-wrapper">
             <img
               v-if="product.imageUrl"
               class="product-image"
-              :src="product.imageUrl"
+              :src="toCdnUrl(product.imageUrl)"
               :alt="product.name"
             />
           </div>
@@ -46,7 +47,7 @@
             <div class="product-title">{{ product.name }}</div>
             <div class="product-bottom">
               <div class="product-price">{{ formatPrice(product.price) }}</div>
-              <button class="add-to-cart-btn" @click="addToCart(product)">
+              <button class="add-to-cart-btn" @click.stop="addToCart(product)">
                 <iconify-icon icon="lucide:plus" style="font-size: 16px; color: var(--primary-foreground)" />
               </button>
             </div>
@@ -102,6 +103,7 @@ import { db } from '../firebase/index.js'
 import { useCartStore } from '../stores/cart.js'
 import { useAuthStore } from '../stores/auth.js'
 import IconButton from '../components/IconButton.vue'
+import { toCdnUrl } from '../utils/storage.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -165,6 +167,10 @@ function formatPrice(price) {
 
 function addToCart(product) {
   cartStore.addItem(storeId, product)
+}
+
+function goToDetail(product) {
+  router.push({ name: 'product-detail', params: { storeId, productId: product.id } })
 }
 
 function goToSearch() {
@@ -273,6 +279,7 @@ async function handleSignOut() {
   flex-direction: column;
   gap: 10px;
   min-width: 0;
+  cursor: pointer;
 }
 
 .product-image-wrapper {

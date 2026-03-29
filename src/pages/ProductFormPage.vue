@@ -24,7 +24,7 @@
         />
         <div class="image-gallery">
           <div v-if="form.imageUrl" class="uploaded-image-card">
-            <img :src="form.imageUrl" alt="Product" />
+            <img :src="toCdnUrl(form.imageUrl)" alt="Product" />
             <button class="remove-image-btn" @click="form.imageUrl = ''">
               <iconify-icon icon="lucide:x" style="font-size: 14px; color: #fff" />
             </button>
@@ -89,7 +89,7 @@
         <!-- Category -->
         <h2 class="section-title">Category</h2>
         <div class="settings-list">
-          <button class="settings-item" @click="editingCategory = true">
+          <button class="settings-item" @click="openCategory">
             <div class="settings-item-content">
               <span class="settings-item-label">Category</span>
               <span class="settings-item-value">{{ form.category || 'Not set' }}</span>
@@ -115,33 +115,53 @@
     </main>
 
     <!-- Category bottom sheet -->
-    <div v-if="editingCategory" class="overlay" @click="editingCategory = false">
+    <div v-if="editingCategory" class="overlay" @click="closeCategory">
       <div class="bottom-sheet" @click.stop>
         <div class="sheet-handle"></div>
         <p class="sheet-title">Category</p>
         <input
+          ref="categoryInputRef"
           class="form-input"
-          v-model="form.category"
-          placeholder="e.g. Home Decor"
+          v-model="categoryDraft"
+          placeholder="Search or create new..."
         />
-        <button class="sheet-done-btn" @click="editingCategory = false">Done</button>
+        <div v-if="filteredCategories.length" class="category-chips">
+          <button
+            v-for="cat in filteredCategories"
+            :key="cat"
+            class="category-chip"
+            :class="{ selected: categoryDraft === cat }"
+            @click="selectCategory(cat)"
+          >{{ cat }}</button>
+        </div>
+        <button
+          v-if="categoryDraft.trim() && !exactCategoryMatch"
+          class="create-category-btn"
+          @click="selectCategory(categoryDraft.trim())"
+        >
+          <iconify-icon icon="lucide:plus" style="font-size: 16px" />
+          Create "{{ categoryDraft.trim() }}"
+        </button>
+        <button class="sheet-done-btn" @click="closeCategory">Done</button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   doc,
   getDoc,
+  getDocs,
   addDoc,
   setDoc,
   collection,
   serverTimestamp,
 } from 'firebase/firestore'
-import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage'
+import { ref as storageRef, uploadBytes } from 'firebase/storage'
+import { toCdnUrl } from '../utils/storage.js'
 import { db, storage } from '../firebase/index.js'
 import { useAuthStore } from '../stores/auth.js'
 import IconButton from '../components/IconButton.vue'
@@ -170,6 +190,9 @@ const loadingProduct = ref(isEdit.value)
 const uploading = ref(false)
 const fileInputRef = ref(null)
 const editingCategory = ref(false)
+const categoryDraft = ref('')
+const categoryInputRef = ref(null)
+const existingCategories = ref([])
 
 onMounted(async () => {
   if (!authStore.user) {
@@ -182,6 +205,11 @@ onMounted(async () => {
     router.replace({ name: 'store', params: { storeId } })
     return
   }
+
+  const productsSnap = await getDocs(collection(db, 'stores', storeId, 'products'))
+  const cats = new Set()
+  productsSnap.forEach((d) => { if (d.data().category) cats.add(d.data().category) })
+  existingCategories.value = [...cats].sort()
 
   if (isEdit.value) {
     const productSnap = await getDoc(doc(db, 'stores', storeId, 'products', productId))
@@ -201,16 +229,75 @@ onMounted(async () => {
   }
 })
 
+const filteredCategories = computed(() => {
+  const q = categoryDraft.value.trim().toLowerCase()
+  if (!q) return existingCategories.value
+  return existingCategories.value.filter((c) => c.toLowerCase().includes(q))
+})
+
+const exactCategoryMatch = computed(() =>
+  existingCategories.value.some(
+    (c) => c.toLowerCase() === categoryDraft.value.trim().toLowerCase()
+  )
+)
+
+function openCategory() {
+  categoryDraft.value = form.value.category
+  editingCategory.value = true
+  nextTick(() => categoryInputRef.value?.focus())
+}
+
+function closeCategory() {
+  editingCategory.value = false
+}
+
+function selectCategory(cat) {
+  form.value.category = cat
+  categoryDraft.value = cat
+  editingCategory.value = false
+}
+
+function compressImage(file, maxPx = 1200, quality = 0.8) {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    const objectUrl = URL.createObjectURL(file)
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl)
+      let { width, height } = img
+      if (width > maxPx || height > maxPx) {
+        if (width >= height) {
+          height = Math.round((height / width) * maxPx)
+          width = maxPx
+        } else {
+          width = Math.round((width / height) * maxPx)
+          height = maxPx
+        }
+      }
+      const canvas = document.createElement('canvas')
+      canvas.width = width
+      canvas.height = height
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height)
+      canvas.toBlob(
+        (blob) => blob ? resolve(blob) : reject(new Error('Compression failed')),
+        'image/jpeg',
+        quality,
+      )
+    }
+    img.onerror = () => { URL.revokeObjectURL(objectUrl); reject(new Error('Image load failed')) }
+    img.src = objectUrl
+  })
+}
+
 async function onFileSelected(event) {
   const file = event.target.files?.[0]
   if (!file) return
   uploading.value = true
   error.value = ''
   try {
-    const ext = file.name.split('.').pop()
-    const path = `stores/${storeId}/products/${Date.now()}.${ext}`
-    const snap = await uploadBytes(storageRef(storage, path), file)
-    form.value.imageUrl = await getDownloadURL(snap.ref)
+    const compressed = await compressImage(file)
+    const path = `stores/${storeId}/products/${Date.now()}.jpg`
+    await uploadBytes(storageRef(storage, path), compressed)
+    form.value.imageUrl = `https://storage.googleapis.com/${import.meta.env.VITE_FIREBASE_STORAGE_BUCKET}/${path}`
   } catch (e) {
     error.value = 'Image upload failed. Please try again.'
   } finally {
@@ -245,7 +332,7 @@ async function submit() {
       await addDoc(collection(db, 'stores', storeId, 'products'), payload)
     }
 
-    router.replace({ name: 'store', params: { storeId } })
+    router.replace({ name: 'manage-products', params: { storeId } })
   } catch (e) {
     error.value = e.message ?? 'Something went wrong. Please try again.'
   } finally {
@@ -607,6 +694,44 @@ async function submit() {
   font-size: 16px;
   font-weight: 600;
   color: var(--foreground);
+}
+
+.category-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.category-chip {
+  padding: 8px 16px;
+  border-radius: var(--radius-xl);
+  background-color: var(--muted);
+  color: var(--foreground);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background-color 0.1s;
+}
+
+.category-chip.selected {
+  background-color: var(--secondary);
+  color: var(--secondary-foreground);
+  border-color: var(--primary);
+}
+
+.create-category-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  background-color: var(--muted);
+  color: var(--foreground);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
 }
 
 .sheet-done-btn {

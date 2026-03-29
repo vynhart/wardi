@@ -65,7 +65,7 @@
           @click="goToEdit(product)"
         >
           <div class="product-thumb">
-            <img v-if="product.imageUrl" :src="product.imageUrl" :alt="product.name" />
+            <img v-if="product.imageUrl" :src="toCdnUrl(product.imageUrl)" :alt="product.name" />
             <iconify-icon v-else icon="lucide:image" style="font-size: 24px; color: var(--muted-foreground)" />
           </div>
           <div class="product-info">
@@ -109,6 +109,7 @@ import { doc, collection, onSnapshot, getDoc } from 'firebase/firestore'
 import { db } from '../firebase/index.js'
 import { useAuthStore } from '../stores/auth.js'
 import IconButton from '../components/IconButton.vue'
+import { toCdnUrl } from '../utils/storage.js'
 
 const route = useRoute()
 const router = useRouter()

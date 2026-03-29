@@ -39,7 +39,7 @@
               <img
                 v-if="product.imageUrl"
                 class="product-image"
-                :src="product.imageUrl"
+                :src="toCdnUrl(product.imageUrl)"
                 :alt="product.name"
               />
             </div>
@@ -81,7 +81,7 @@
               <img
                 v-if="product.imageUrl"
                 class="product-image"
-                :src="product.imageUrl"
+                :src="toCdnUrl(product.imageUrl)"
                 :alt="product.name"
               />
             </div>
@@ -103,6 +103,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { collection, getDocs } from 'firebase/firestore'
 import { db } from '../firebase/index.js'
 import IconButton from '../components/IconButton.vue'
+import { toCdnUrl } from '../utils/storage.js'
 
 const route = useRoute()
 const router = useRouter()
