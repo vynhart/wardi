@@ -67,9 +67,9 @@
       </div>
 
       <div class="brand-footer">
-        <span class="brand-footer-link">
+        <RouterLink to="/" class="brand-footer-link">
           Powered by <span class="brand-footer-name">wardi</span>
-        </span>
+        </RouterLink>
       </div>
     </main>
 
@@ -172,13 +172,17 @@ const isOwner = computed(
 )
 
 const categories = computed(() => {
-  const cats = new Set(products.value.map((p) => p.category).filter(Boolean))
+  const cats = new Set(visibleProducts.value.map((p) => p.category).filter(Boolean))
   return ['All', ...cats]
 })
 
+const visibleProducts = computed(() =>
+  isSellerMode.value ? products.value : products.value.filter((p) => p.visible !== false)
+)
+
 const filteredProducts = computed(() => {
-  if (selectedCategory.value === 'All') return products.value
-  return products.value.filter((p) => p.category === selectedCategory.value)
+  if (selectedCategory.value === 'All') return visibleProducts.value
+  return visibleProducts.value.filter((p) => p.category === selectedCategory.value)
 })
 
 const items = cartStore.cartItems(storeId)
@@ -407,6 +411,8 @@ async function handleSignOut() {
   font-size: 13px;
   font-weight: 500;
   color: var(--muted-foreground);
+  text-decoration: none;
+  cursor: pointer;
 }
 
 .brand-footer-name {

@@ -2,82 +2,132 @@
   <div class="page">
     <!-- Header -->
     <nav class="header">
-      <IconButton icon="lucide:arrow-left" @click="router.back()" />
-      <span class="header-title">{{ isEdit ? 'Edit product' : 'Add product' }}</span>
-      <div style="width: 40px"></div>
+      <IconButton icon="lucide:x" @click="router.back()" />
+      <span class="header-title">{{ isEdit ? 'Edit Product' : 'Add Product' }}</span>
+      <button class="header-save-btn" :disabled="saving" @click="submit">
+        {{ saving ? 'Saving...' : 'Save' }}
+      </button>
     </nav>
 
     <main class="content-area">
       <div v-if="loadingProduct" class="loading-state">Loading...</div>
-      <form v-else @submit.prevent="submit" class="form">
-        <!-- Image preview -->
-        <div class="image-preview-wrapper">
-          <img v-if="form.imageUrl" class="image-preview" :src="form.imageUrl" alt="Product" />
-          <div v-else class="image-placeholder">
-            <iconify-icon icon="lucide:image" style="font-size: 32px; color: var(--muted-foreground)" />
+      <div v-else class="form-body">
+
+        <!-- Product Images -->
+        <h2 class="section-title">Product Images</h2>
+        <div class="image-gallery">
+          <div v-if="form.imageUrl" class="uploaded-image-card">
+            <img :src="form.imageUrl" alt="Product" />
+            <button class="remove-image-btn" @click="form.imageUrl = ''; addingImageUrl = false">
+              <iconify-icon icon="lucide:x" style="font-size: 14px; color: #fff" />
+            </button>
+          </div>
+          <button v-if="!form.imageUrl" class="image-upload-card" @click="addingImageUrl = true">
+            <iconify-icon icon="lucide:image-plus" style="font-size: 24px; color: var(--muted-foreground)" />
+            <span class="add-photo-label">Add Photo</span>
+          </button>
+        </div>
+
+        <div v-if="addingImageUrl" class="url-input-row">
+          <input
+            class="form-input url-input"
+            v-model="imageUrlDraft"
+            type="url"
+            placeholder="https://..."
+            @keydown.enter="confirmImageUrl"
+          />
+          <button class="url-confirm-btn" @click="confirmImageUrl">Add</button>
+          <button class="url-cancel-btn" @click="addingImageUrl = false; imageUrlDraft = ''">Cancel</button>
+        </div>
+        <span class="helper-text">First image will be the cover.</span>
+
+        <!-- Product Details -->
+        <h2 class="section-title">Product Details</h2>
+
+        <span class="input-label">Product Name</span>
+        <input
+          class="form-input"
+          v-model="form.name"
+          placeholder="e.g. Minimalist Ceramic Vase"
+          required
+        />
+
+        <div class="row-group">
+          <div class="col">
+            <span class="input-label">Price</span>
+            <div class="price-wrapper">
+              <span class="price-prefix">$</span>
+              <input
+                class="form-input price-input"
+                v-model.number="form.price"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+              />
+            </div>
+          </div>
+          <div class="col">
+            <span class="input-label">Stock</span>
+            <input
+              class="form-input"
+              v-model.number="form.stock"
+              type="number"
+              min="0"
+              placeholder="0"
+            />
           </div>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">Product name</label>
-          <input
-            class="form-input"
-            v-model="form.name"
-            placeholder="e.g. Ceramic Vase"
-            required
-          />
+        <span class="input-label">Description</span>
+        <textarea
+          class="form-input form-textarea"
+          v-model="form.description"
+          placeholder="Describe your product..."
+          rows="4"
+        ></textarea>
+
+        <!-- Category -->
+        <h2 class="section-title">Category</h2>
+        <div class="settings-list">
+          <button class="settings-item" @click="editingCategory = true">
+            <div class="settings-item-content">
+              <span class="settings-item-label">Category</span>
+              <span class="settings-item-value">{{ form.category || 'Not set' }}</span>
+            </div>
+            <iconify-icon icon="lucide:chevron-right" style="font-size: 20px; color: var(--muted-foreground)" />
+          </button>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">Price (USD)</label>
-          <input
-            class="form-input"
-            v-model.number="form.price"
-            type="number"
-            min="0"
-            step="0.01"
-            placeholder="0.00"
-            required
-          />
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Category</label>
-          <input
-            class="form-input"
-            v-model="form.category"
-            placeholder="e.g. Decor"
-          />
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Stock</label>
-          <input
-            class="form-input"
-            v-model.number="form.stock"
-            type="number"
-            min="0"
-            placeholder="0"
-          />
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Image URL</label>
-          <input
-            class="form-input"
-            v-model="form.imageUrl"
-            type="url"
-            placeholder="https://..."
-          />
+        <!-- Visibility -->
+        <h2 class="section-title">Visibility</h2>
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <span class="toggle-title">Publish Product</span>
+            <span class="toggle-desc">Make this product visible in your catalog</span>
+          </div>
+          <button class="toggle-switch" :class="{ active: form.visible }" @click="form.visible = !form.visible">
+            <div class="toggle-knob"></div>
+          </button>
         </div>
 
         <p v-if="error" class="form-error">{{ error }}</p>
-
-        <button type="submit" class="submit-btn" :disabled="saving">
-          {{ saving ? 'Saving...' : isEdit ? 'Save changes' : 'Add product' }}
-        </button>
-      </form>
+      </div>
     </main>
+
+    <!-- Category bottom sheet -->
+    <div v-if="editingCategory" class="overlay" @click="editingCategory = false">
+      <div class="bottom-sheet" @click.stop>
+        <div class="sheet-handle"></div>
+        <p class="sheet-title">Category</p>
+        <input
+          class="form-input"
+          v-model="form.category"
+          placeholder="e.g. Home Decor"
+        />
+        <button class="sheet-done-btn" @click="editingCategory = false">Done</button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -107,23 +157,26 @@ const isEdit = computed(() => !!productId)
 const form = ref({
   name: '',
   price: '',
-  category: '',
   stock: '',
+  description: '',
+  category: '',
   imageUrl: '',
+  visible: true,
 })
 
 const saving = ref(false)
 const error = ref('')
 const loadingProduct = ref(isEdit.value)
+const addingImageUrl = ref(false)
+const imageUrlDraft = ref('')
+const editingCategory = ref(false)
 
 onMounted(async () => {
-  // Guard: must be authenticated
   if (!authStore.user) {
     router.replace({ name: 'store', params: { storeId } })
     return
   }
 
-  // Guard: must own the store
   const storeSnap = await getDoc(doc(db, 'stores', storeId))
   if (!storeSnap.exists() || storeSnap.data().ownerUid !== authStore.user.uid) {
     router.replace({ name: 'store', params: { storeId } })
@@ -137,25 +190,41 @@ onMounted(async () => {
       form.value = {
         name: data.name ?? '',
         price: data.price ?? '',
-        category: data.category ?? '',
         stock: data.stock ?? '',
+        description: data.description ?? '',
+        category: data.category ?? '',
         imageUrl: data.imageUrl ?? '',
+        visible: data.visible !== false,
       }
     }
     loadingProduct.value = false
   }
 })
 
+function confirmImageUrl() {
+  if (imageUrlDraft.value.trim()) {
+    form.value.imageUrl = imageUrlDraft.value.trim()
+  }
+  addingImageUrl.value = false
+  imageUrlDraft.value = ''
+}
+
 async function submit() {
+  if (!form.value.name.trim()) {
+    error.value = 'Product name is required.'
+    return
+  }
   error.value = ''
   saving.value = true
   try {
     const payload = {
       name: form.value.name.trim(),
-      price: Number(form.value.price),
+      price: Number(form.value.price) || 0,
+      stock: Number(form.value.stock) || 0,
+      description: form.value.description.trim(),
       category: form.value.category.trim(),
-      stock: Number(form.value.stock),
       imageUrl: form.value.imageUrl.trim(),
+      visible: form.value.visible,
       updatedAt: serverTimestamp(),
     }
 
@@ -185,7 +254,7 @@ async function submit() {
 }
 
 .header {
-  padding: 20px;
+  padding: 16px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -197,71 +266,181 @@ async function submit() {
 }
 
 .header-title {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--foreground);
 }
 
+.header-save-btn {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--primary);
+  padding: 8px 4px;
+  background: none;
+  cursor: pointer;
+}
+
+.header-save-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .content-area {
   flex: 1;
-  padding: 24px 20px 40px;
+  padding: 24px 20px 48px;
   overflow-y: auto;
-}
-
-/* Image preview */
-.image-preview-wrapper {
-  width: 100%;
-  aspect-ratio: 4 / 3;
-  border-radius: var(--radius-lg);
-  background-color: var(--secondary);
-  overflow: hidden;
-  margin-bottom: 24px;
+  background-color: var(--background);
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
 }
 
-.image-preview {
+.form-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--foreground);
+  margin-bottom: 16px;
+  margin-top: 28px;
+}
+
+.section-title:first-child {
+  margin-top: 0;
+}
+
+/* Images */
+.image-gallery {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scrollbar-width: none;
+}
+
+.image-gallery::-webkit-scrollbar {
+  display: none;
+}
+
+.uploaded-image-card {
+  min-width: 100px;
+  width: 100px;
+  height: 100px;
+  border-radius: var(--radius-md);
+  background-color: var(--muted);
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.uploaded-image-card img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.image-placeholder {
+.remove-image-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
 }
 
-/* Form */
-.form {
+.image-upload-card {
+  min-width: 100px;
+  width: 100px;
+  height: 100px;
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-md);
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background-color: transparent;
+  flex-shrink: 0;
+  cursor: pointer;
 }
 
-.form-group {
+.add-photo-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted-foreground);
+}
+
+.url-input-row {
   display: flex;
-  flex-direction: column;
   gap: 8px;
+  align-items: center;
+  margin-top: 12px;
 }
 
-.form-label {
+.url-input {
+  flex: 1;
+  margin-bottom: 0 !important;
+}
+
+.url-confirm-btn {
+  padding: 0 14px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.url-cancel-btn {
+  padding: 0 14px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  background-color: var(--secondary);
+  color: var(--foreground);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.helper-text {
+  font-size: 12px;
+  color: var(--muted-foreground);
+  margin-top: 8px;
+  margin-bottom: 0;
+}
+
+/* Form inputs */
+.input-label {
   font-size: 14px;
   font-weight: 500;
   color: var(--foreground);
+  margin-bottom: 8px;
+  display: block;
+  margin-top: 16px;
 }
 
 .form-input {
   width: 100%;
-  height: 48px;
-  padding: 0 16px;
-  border-radius: var(--radius-lg);
-  border: 1.5px solid var(--border);
-  background-color: var(--input);
+  min-height: 48px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
   font-size: 15px;
   font-family: var(--font-family-body);
   color: var(--foreground);
+  background-color: var(--background);
   outline: none;
   transition: border-color 0.15s;
 }
@@ -274,27 +453,187 @@ async function submit() {
   color: var(--muted-foreground);
 }
 
+.form-textarea {
+  min-height: 100px;
+  resize: none;
+  line-height: 1.5;
+  padding-top: 12px;
+}
+
+.row-group {
+  display: flex;
+  gap: 16px;
+}
+
+.col {
+  flex: 1;
+  min-width: 0;
+}
+
+.price-wrapper {
+  position: relative;
+}
+
+.price-prefix {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 15px;
+  color: var(--muted-foreground);
+  pointer-events: none;
+}
+
+.price-input {
+  padding-left: 28px;
+}
+
+/* Category settings list */
+.settings-list {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background-color: var(--background);
+}
+
+.settings-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  width: 100%;
+  background: none;
+  cursor: pointer;
+}
+
+.settings-item-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+}
+
+.settings-item-label {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--foreground);
+}
+
+.settings-item-value {
+  font-size: 14px;
+  color: var(--muted-foreground);
+}
+
+/* Visibility toggle */
+.toggle-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background-color: var(--background);
+}
+
+.toggle-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.toggle-title {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--foreground);
+}
+
+.toggle-desc {
+  font-size: 13px;
+  color: var(--muted-foreground);
+}
+
+.toggle-switch {
+  width: 44px;
+  height: 24px;
+  border-radius: 12px;
+  background-color: var(--muted);
+  position: relative;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.toggle-switch.active {
+  background-color: var(--primary);
+}
+
+.toggle-knob {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: #fff;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s;
+}
+
+.toggle-switch.active .toggle-knob {
+  transform: translateX(20px);
+}
+
 .form-error {
   font-size: 14px;
   color: var(--destructive);
+  margin-top: 16px;
 }
 
-.submit-btn {
-  height: 56px;
+/* Category bottom sheet */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: 30;
+  display: flex;
+  align-items: flex-end;
+}
+
+.bottom-sheet {
+  width: 100%;
+  background-color: var(--background);
+  border-top-left-radius: 24px;
+  border-top-right-radius: 24px;
+  padding: 20px 20px 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sheet-handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 999px;
+  background-color: var(--border);
+  margin: 0 auto -4px;
+}
+
+.sheet-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.sheet-done-btn {
+  height: 52px;
   border-radius: var(--radius-xl);
   background-color: var(--primary);
   color: var(--primary-foreground);
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  margin-top: 4px;
 }
 
-.submit-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
+/* States */
 .loading-state {
   padding: 40px 0;
   text-align: center;

@@ -1,0 +1,469 @@
+<div
+  class="export-wrapper"
+  style="
+    width: 375px;
+    min-height: 812px;
+    position: relative;
+    font-family: var(--font-family-body);
+    background-color: var(--background);
+  "
+>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@100;200;300;400;500;600;700;800;900&family=Geist:wght@100;200;300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@100;200;300;400;500;600;700&family=IBM+Plex+Sans:wght@100;200;300;400;500;600;700&family=Inter:wght@100;200;300;400;500;600;700;800;900&family=Nunito:wght@200;300;400;500;600;700;800;900&family=PT+Serif:wght@400;700&family=Roboto+Slab:wght@100;200;300;400;500;600;700;800;900&family=Roboto:wght@100;300;400;500;700;900&family=Shantell+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <html>
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Add Product</title>
+      <style id="global-styles">
+        * {
+          box-sizing: border-box;
+          margin: 0;
+          padding: 0;
+        }
+        .export-wrapper {
+          background-color: var(--muted);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          min-height: 812px;
+          font-family: var(--font-family-body, sans-serif);
+          padding: 40px 0;
+        }
+      </style>
+      <style id="mobile-container-styles">
+        .mobile-wrapper {
+          width: 100%;
+          max-width: 375px;
+          background-color: var(--background);
+          min-height: 812px;
+          border-radius: 40px;
+          box-shadow:
+            0 20px 40px rgba(0, 0, 0, 0.08),
+            0 1px 3px rgba(0, 0, 0, 0.05);
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          position: relative;
+          border: 8px solid var(--border);
+        }
+        .header {
+          padding: 16px 20px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          background-color: var(--background);
+          position: sticky;
+          top: 0;
+          z-index: 10;
+          border-bottom: 1px solid var(--border);
+        }
+        .header-title {
+          font-size: 16px;
+          font-weight: 600;
+          color: var(--foreground);
+        }
+        .icon-button {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background-color: transparent;
+          margin-left: -8px;
+        }
+        .header-action {
+          font-size: 15px;
+          font-weight: 600;
+          color: var(--primary);
+          margin-right: -4px;
+          padding: 8px;
+        }
+      </style>
+      <style id="form-styles">
+        .content-area {
+          flex: 1;
+          padding: 24px 20px 40px;
+          overflow-y: auto;
+          background-color: var(--background);
+          display: flex;
+          flex-direction: column;
+        }
+
+        .section-title {
+          font-size: 16px;
+          font-weight: 600;
+          color: var(--foreground);
+          margin-bottom: 16px;
+          margin-top: 24px;
+        }
+        .section-title:first-child {
+          margin-top: 0;
+        }
+
+        .image-gallery {
+          display: flex;
+          gap: 12px;
+          overflow-x: auto;
+          padding-bottom: 8px;
+          margin-bottom: 8px;
+          scrollbar-width: none;
+        }
+        .image-gallery::-webkit-scrollbar {
+          display: none;
+        }
+
+        .uploaded-image-card {
+          min-width: 100px;
+          width: 100px;
+          height: 100px;
+          border-radius: var(--radius-md);
+          background-color: var(--muted);
+          border: 1px solid var(--border);
+          flex-shrink: 0;
+          position: relative;
+          overflow: hidden;
+        }
+        .uploaded-image-card img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+        .remove-image-btn {
+          position: absolute;
+          top: 6px;
+          right: 6px;
+          width: 24px;
+          height: 24px;
+          border-radius: 50%;
+          background-color: rgba(0, 0, 0, 0.6);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .image-upload-card {
+          min-width: 100px;
+          width: 100px;
+          height: 100px;
+          border: 2px dashed var(--border);
+          border-radius: var(--radius-md);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          background-color: transparent;
+          flex-shrink: 0;
+        }
+
+        .input-label {
+          font-size: 14px;
+          font-weight: 500;
+          color: var(--foreground);
+          margin-bottom: 8px;
+          display: block;
+        }
+
+        .fake-input {
+          width: 100%;
+          min-height: 48px;
+          border: 1px solid var(--border);
+          border-radius: var(--radius-md);
+          padding: 12px 16px;
+          font-size: 15px;
+          color: var(--foreground);
+          background-color: var(--background);
+          display: flex;
+          align-items: center;
+          margin-bottom: 16px;
+        }
+
+        .fake-input.textarea {
+          min-height: 100px;
+          align-items: flex-start;
+        }
+
+        .settings-list {
+          border: 1px solid var(--border);
+          border-radius: var(--radius-md);
+          background-color: var(--background);
+        }
+        .settings-item {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 16px;
+          border-bottom: 1px solid var(--border);
+        }
+        .settings-item:last-child {
+          border-bottom: none;
+        }
+        .settings-item-content {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+        .settings-item-label {
+          font-size: 15px;
+          font-weight: 500;
+          color: var(--foreground);
+        }
+        .settings-item-value {
+          font-size: 14px;
+          color: var(--muted-foreground);
+        }
+
+        .toggle-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 16px;
+          border: 1px solid var(--border);
+          border-radius: var(--radius-md);
+          background-color: var(--background);
+        }
+        .toggle-info {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+        .toggle-title {
+          font-size: 15px;
+          font-weight: 500;
+          color: var(--foreground);
+        }
+        .toggle-desc {
+          font-size: 13px;
+          color: var(--muted-foreground);
+        }
+        .fake-switch {
+          width: 44px;
+          height: 24px;
+          border-radius: 12px;
+          background-color: var(--primary);
+          position: relative;
+          flex-shrink: 0;
+        }
+        .fake-switch-knob {
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          background-color: var(--primary-foreground, #ffffff);
+          position: absolute;
+          top: 2px;
+          right: 2px;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .helper-text {
+          font-size: 12px;
+          color: var(--muted-foreground);
+          margin-top: -10px;
+          margin-bottom: 16px;
+          display: block;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="mobile-wrapper" id="add-product-screen">
+        <nav class="header" id="add-product-header">
+          <div
+            class="icon-button"
+            id="close-button"
+            data-media-type="banani-button"
+          >
+            <div
+              style="
+                width: 24px;
+                height: 24px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              "
+            >
+              <iconify-icon
+                icon="lucide:x"
+                style="font-size: 24px; color: var(--foreground)"
+              ></iconify-icon>
+            </div>
+          </div>
+          <div class="header-title">Add Product</div>
+          <div class="header-action" data-media-type="banani-button">Save</div>
+        </nav>
+
+        <main class="content-area" id="add-product-content">
+          <h2 class="section-title">Product Images</h2>
+          <div class="image-gallery">
+            <div class="uploaded-image-card">
+              <img
+                src="https://storage.googleapis.com/banani-generated-images/generated-images/211f5a60-ca34-484a-81c2-e9ca61ea58aa.jpg"
+                data-aspect-ratio="1:1"
+                data-query="minimalist aesthetic product"
+              />
+              <div class="remove-image-btn" data-media-type="banani-button">
+                <div
+                  style="
+                    width: 14px;
+                    height: 14px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                  "
+                >
+                  <iconify-icon
+                    icon="lucide:x"
+                    style="font-size: 14px; color: #ffffff"
+                  ></iconify-icon>
+                </div>
+              </div>
+            </div>
+            <div class="image-upload-card" data-media-type="banani-button">
+              <div
+                style="
+                  width: 24px;
+                  height: 24px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  margin-bottom: 4px;
+                "
+              >
+                <iconify-icon
+                  icon="lucide:image-plus"
+                  style="font-size: 24px; color: var(--muted-foreground)"
+                ></iconify-icon>
+              </div>
+              <span
+                style="
+                  font-size: 12px;
+                  color: var(--muted-foreground);
+                  font-weight: 500;
+                "
+                >Add Photo</span
+              >
+            </div>
+          </div>
+          <span class="helper-text"
+            >Add up to 5 images. First image will be the cover.</span
+          >
+
+          <h2 class="section-title">Product Details</h2>
+
+          <span class="input-label">Product Name</span>
+          <div class="fake-input" data-media-type="banani-button">
+            <span style="color: var(--foreground)"
+              >Minimalist Ceramic Vase</span
+            >
+          </div>
+
+          <div style="display: flex; gap: 16px">
+            <div style="flex: 1">
+              <span class="input-label">Price</span>
+              <div
+                class="fake-input"
+                data-media-type="banani-button"
+                style="gap: 8px"
+              >
+                <span style="color: var(--muted-foreground)">$</span>
+                <span style="color: var(--foreground)">90.00</span>
+              </div>
+            </div>
+            <div style="flex: 1">
+              <span class="input-label">Stock</span>
+              <div class="fake-input" data-media-type="banani-button">
+                <span style="color: var(--foreground)">12</span>
+              </div>
+            </div>
+          </div>
+
+          <span class="input-label">Description</span>
+          <div class="fake-input textarea" data-media-type="banani-button">
+            <span style="color: var(--foreground); line-height: 1.5"
+              >Beautiful minimalist ceramic vase with a matte white finish.
+              Perfect for dried flowers or as a standalone decorative
+              piece.</span
+            >
+          </div>
+
+          <h2 class="section-title">Category</h2>
+
+          <div class="settings-list">
+            <div class="settings-item" data-media-type="banani-button">
+              <div class="settings-item-content">
+                <span class="settings-item-label">Category</span>
+                <span class="settings-item-value">Home Decor</span>
+              </div>
+              <div
+                style="
+                  width: 20px;
+                  height: 20px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                "
+              >
+                <iconify-icon
+                  icon="lucide:chevron-right"
+                  style="font-size: 20px; color: var(--muted-foreground)"
+                ></iconify-icon>
+              </div>
+            </div>
+          </div>
+
+          <h2 class="section-title">Visibility</h2>
+
+          <div class="toggle-row" data-media-type="banani-button">
+            <div class="toggle-info">
+              <span class="toggle-title">Publish Product</span>
+              <span class="toggle-desc"
+                >Make this product visible in your catalog</span
+              >
+            </div>
+            <div class="fake-switch">
+              <div class="fake-switch-knob"></div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </body>
+  </html>
+  <script src="https://code.iconify.design/iconify-icon/3.0.0/iconify-icon.min.js"></script>
+  <style>
+    :root {
+      --background: #ffffff;
+      --foreground: #0f1724;
+      --border: #00000014;
+      --input: #f8fafb;
+      --primary: #0066ff;
+      --primary-foreground: #ffffff;
+      --secondary: #f1f6ff;
+      --secondary-foreground: #0840a8;
+      --muted: #f3f4f6;
+      --muted-foreground: #94a3b8;
+      --success: #22c55e;
+      --success-foreground: #ffffff;
+      --accent: #ffd166;
+      --accent-foreground: #222222;
+      --destructive: #ef4444;
+      --destructive-foreground: #ffffff;
+      --warning: #f59e0b;
+      --warning-foreground: #111827;
+      --card: #ffffff;
+      --card-foreground: #0f1724;
+      --sidebar: #f8fafb;
+      --sidebar-foreground: #0b1220;
+      --sidebar-primary: #e6f0ff;
+      --sidebar-primary-foreground: #003eaa;
+      --radius-sm: 4px;
+      --radius-md: 6px;
+      --radius-lg: 8px;
+      --radius-xl: 12px;
+      --font-family-body: Inter;
+    }
+  </style>
+</div>

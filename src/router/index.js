@@ -18,6 +18,17 @@ const routes = [
       if (!snap.empty) {
         return { name: 'store', params: { storeId: snap.docs[0].id } }
       }
+      return { name: 'create-store' }
+    },
+  },
+  {
+    path: '/create-store',
+    name: 'create-store',
+    component: () => import('../pages/CreateStorePage.vue'),
+    async beforeEnter() {
+      const authStore = useAuthStore()
+      await authStore.ready
+      if (!authStore.user) return { name: 'home' }
       return true
     },
   },
