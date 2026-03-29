@@ -2,7 +2,8 @@
   <div class="page">
     <!-- Header -->
     <nav class="header">
-      <IconButton icon="lucide:menu" @click="toggleSellerMenu" />
+      <IconButton v-if="isOwner" icon="lucide:menu" @click="toggleSellerMenu" />
+      <div v-else style="width: 40px" />
       <span class="header-title">{{ store?.name ?? '...' }}</span>
       <div class="header-actions">
         <IconButton icon="lucide:search" @click="goToSearch" />
@@ -11,14 +12,6 @@
 
     <!-- Content -->
     <main class="content-area" :style="hasCartItems ? 'padding-bottom: 168px' : ''">
-      <!-- Seller mode toolbar -->
-      <div v-if="isSellerMode" class="seller-toolbar">
-        <button class="seller-add-btn" @click="goToAddProduct">
-          <iconify-icon icon="lucide:plus" style="font-size: 16px" />
-          Add product
-        </button>
-      </div>
-
       <!-- Categories -->
       <div v-if="categories.length > 1" class="categories">
         <button
@@ -53,12 +46,7 @@
             <div class="product-title">{{ product.name }}</div>
             <div class="product-bottom">
               <div class="product-price">{{ formatPrice(product.price) }}</div>
-              <!-- Seller mode: edit button -->
-              <button v-if="isSellerMode" class="edit-product-btn" @click="goToEditProduct(product)">
-                <iconify-icon icon="lucide:pencil" style="font-size: 14px; color: var(--primary-foreground)" />
-              </button>
-              <!-- Buyer mode: add to cart -->
-              <button v-else class="add-to-cart-btn" @click="addToCart(product)">
+              <button class="add-to-cart-btn" @click="addToCart(product)">
                 <iconify-icon icon="lucide:plus" style="font-size: 16px; color: var(--primary-foreground)" />
               </button>
             </div>
@@ -73,8 +61,8 @@
       </div>
     </main>
 
-    <!-- Cart bottom sheet (buyer mode only) -->
-    <div v-if="hasCartItems && !isSellerMode" class="cart-sheet">
+    <!-- Cart bottom sheet -->
+    <div v-if="hasCartItems" class="cart-sheet">
       <div class="sheet-handle"></div>
       <div class="cart-sheet-row">
         <div class="cart-sheet-left">
@@ -89,34 +77,18 @@
       </div>
     </div>
 
-    <!-- Seller menu overlay -->
-    <div v-if="sellerMenuOpen" class="overlay" @click="sellerMenuOpen = false">
+    <!-- Seller menu overlay (owner only) -->
+    <div v-if="sellerMenuOpen && isOwner" class="overlay" @click="sellerMenuOpen = false">
       <div class="seller-menu" @click.stop>
-        <template v-if="!authStore.user">
-          <p class="seller-menu-hint">Are you the store owner?</p>
-          <button class="seller-menu-btn" @click="handleSignIn">
-            <iconify-icon icon="lucide:log-in" style="font-size: 18px" />
-            Sign in with Google
-          </button>
-        </template>
-        <template v-else-if="isOwner">
-          <p class="seller-menu-hint">Seller mode</p>
-          <button class="seller-menu-btn" @click="toggleSellerMode">
-            <iconify-icon :icon="isSellerMode ? 'lucide:eye' : 'lucide:store'" style="font-size: 18px" />
-            {{ isSellerMode ? 'Switch to buyer view' : 'Switch to seller mode' }}
-          </button>
-          <button class="seller-menu-btn seller-menu-btn--danger" @click="handleSignOut">
-            <iconify-icon icon="lucide:log-out" style="font-size: 18px" />
-            Sign out
-          </button>
-        </template>
-        <template v-else>
-          <p class="seller-menu-hint">You are signed in but don't own this store.</p>
-          <button class="seller-menu-btn seller-menu-btn--danger" @click="handleSignOut">
-            <iconify-icon icon="lucide:log-out" style="font-size: 18px" />
-            Sign out
-          </button>
-        </template>
+        <p class="seller-menu-hint">Seller</p>
+        <button class="seller-menu-btn" @click="goToDashboard">
+          <iconify-icon icon="lucide:layout-grid" style="font-size: 18px" />
+          Seller Dashboard
+        </button>
+        <button class="seller-menu-btn seller-menu-btn--danger" @click="handleSignOut">
+          <iconify-icon icon="lucide:log-out" style="font-size: 18px" />
+          Sign out
+        </button>
       </div>
     </div>
   </div>
@@ -143,7 +115,6 @@ const products = ref([])
 const loading = ref(true)
 const selectedCategory = ref('All')
 const sellerMenuOpen = ref(false)
-const isSellerMode = ref(false)
 
 // Firestore listeners
 let unsubStore = null
@@ -176,9 +147,7 @@ const categories = computed(() => {
   return ['All', ...cats]
 })
 
-const visibleProducts = computed(() =>
-  isSellerMode.value ? products.value : products.value.filter((p) => p.visible !== false)
-)
+const visibleProducts = computed(() => products.value.filter((p) => p.visible !== false))
 
 const filteredProducts = computed(() => {
   if (selectedCategory.value === 'All') return visibleProducts.value
@@ -206,31 +175,17 @@ function goToCart() {
   router.push({ name: 'cart', params: { storeId } })
 }
 
-function goToAddProduct() {
-  router.push({ name: 'product-add', params: { storeId } })
-}
-
-function goToEditProduct(product) {
-  router.push({ name: 'product-edit', params: { storeId, productId: product.id } })
-}
-
 function toggleSellerMenu() {
   sellerMenuOpen.value = !sellerMenuOpen.value
 }
 
-function toggleSellerMode() {
-  isSellerMode.value = !isSellerMode.value
+function goToDashboard() {
   sellerMenuOpen.value = false
-}
-
-async function handleSignIn() {
-  await authStore.signIn()
-  sellerMenuOpen.value = false
+  router.push({ name: 'seller-dashboard', params: { storeId } })
 }
 
 async function handleSignOut() {
   await authStore.logout()
-  isSellerMode.value = false
   sellerMenuOpen.value = false
 }
 </script>
@@ -273,26 +228,6 @@ async function handleSignOut() {
   padding: 20px 20px 24px;
   overflow-y: auto;
   background-color: var(--background);
-}
-
-/* Seller toolbar */
-.seller-toolbar {
-  margin-bottom: 16px;
-  display: flex;
-  justify-content: flex-end;
-}
-
-.seller-add-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  border-radius: var(--radius-xl);
-  background-color: var(--primary);
-  color: var(--primary-foreground);
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
 }
 
 /* Categories */
@@ -387,8 +322,7 @@ async function handleSignOut() {
   white-space: nowrap;
 }
 
-.add-to-cart-btn,
-.edit-product-btn {
+.add-to-cart-btn {
   width: 32px;
   height: 32px;
   border-radius: 50%;

@@ -15,29 +15,28 @@
 
         <!-- Product Images -->
         <h2 class="section-title">Product Images</h2>
+        <input
+          ref="fileInputRef"
+          type="file"
+          accept="image/*"
+          style="display: none"
+          @change="onFileSelected"
+        />
         <div class="image-gallery">
           <div v-if="form.imageUrl" class="uploaded-image-card">
             <img :src="form.imageUrl" alt="Product" />
-            <button class="remove-image-btn" @click="form.imageUrl = ''; addingImageUrl = false">
+            <button class="remove-image-btn" @click="form.imageUrl = ''">
               <iconify-icon icon="lucide:x" style="font-size: 14px; color: #fff" />
             </button>
           </div>
-          <button v-if="!form.imageUrl" class="image-upload-card" @click="addingImageUrl = true">
+          <div v-else-if="uploading" class="image-upload-card uploading-card">
+            <iconify-icon icon="lucide:loader" class="spin-icon" style="font-size: 24px; color: var(--muted-foreground)" />
+            <span class="add-photo-label">Uploading...</span>
+          </div>
+          <button v-else class="image-upload-card" @click="fileInputRef.click()">
             <iconify-icon icon="lucide:image-plus" style="font-size: 24px; color: var(--muted-foreground)" />
             <span class="add-photo-label">Add Photo</span>
           </button>
-        </div>
-
-        <div v-if="addingImageUrl" class="url-input-row">
-          <input
-            class="form-input url-input"
-            v-model="imageUrlDraft"
-            type="url"
-            placeholder="https://..."
-            @keydown.enter="confirmImageUrl"
-          />
-          <button class="url-confirm-btn" @click="confirmImageUrl">Add</button>
-          <button class="url-cancel-btn" @click="addingImageUrl = false; imageUrlDraft = ''">Cancel</button>
         </div>
         <span class="helper-text">First image will be the cover.</span>
 
@@ -142,7 +141,8 @@ import {
   collection,
   serverTimestamp,
 } from 'firebase/firestore'
-import { db } from '../firebase/index.js'
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage'
+import { db, storage } from '../firebase/index.js'
 import { useAuthStore } from '../stores/auth.js'
 import IconButton from '../components/IconButton.vue'
 
@@ -167,8 +167,8 @@ const form = ref({
 const saving = ref(false)
 const error = ref('')
 const loadingProduct = ref(isEdit.value)
-const addingImageUrl = ref(false)
-const imageUrlDraft = ref('')
+const uploading = ref(false)
+const fileInputRef = ref(null)
 const editingCategory = ref(false)
 
 onMounted(async () => {
@@ -201,12 +201,22 @@ onMounted(async () => {
   }
 })
 
-function confirmImageUrl() {
-  if (imageUrlDraft.value.trim()) {
-    form.value.imageUrl = imageUrlDraft.value.trim()
+async function onFileSelected(event) {
+  const file = event.target.files?.[0]
+  if (!file) return
+  uploading.value = true
+  error.value = ''
+  try {
+    const ext = file.name.split('.').pop()
+    const path = `stores/${storeId}/products/${Date.now()}.${ext}`
+    const snap = await uploadBytes(storageRef(storage, path), file)
+    form.value.imageUrl = await getDownloadURL(snap.ref)
+  } catch (e) {
+    error.value = 'Image upload failed. Please try again.'
+  } finally {
+    uploading.value = false
+    event.target.value = ''
   }
-  addingImageUrl.value = false
-  imageUrlDraft.value = ''
 }
 
 async function submit() {
@@ -378,40 +388,16 @@ async function submit() {
   color: var(--muted-foreground);
 }
 
-.url-input-row {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  margin-top: 12px;
+.uploading-card {
+  cursor: default;
 }
 
-.url-input {
-  flex: 1;
-  margin-bottom: 0 !important;
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
-.url-confirm-btn {
-  padding: 0 14px;
-  height: 48px;
-  border-radius: var(--radius-md);
-  background-color: var(--primary);
-  color: var(--primary-foreground);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-.url-cancel-btn {
-  padding: 0 14px;
-  height: 48px;
-  border-radius: var(--radius-md);
-  background-color: var(--secondary);
-  color: var(--foreground);
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  flex-shrink: 0;
+.spin-icon {
+  animation: spin 1s linear infinite;
 }
 
 .helper-text {

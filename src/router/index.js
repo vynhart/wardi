@@ -16,7 +16,7 @@ const routes = [
         query(collection(db, 'stores'), where('ownerUid', '==', authStore.user.uid))
       )
       if (!snap.empty) {
-        return { name: 'store', params: { storeId: snap.docs[0].id } }
+        return { name: 'seller-dashboard', params: { storeId: snap.docs[0].id } }
       }
       return { name: 'create-store' }
     },
@@ -46,6 +46,16 @@ const routes = [
     path: '/:storeId/cart',
     name: 'cart',
     component: () => import('../pages/CartPage.vue'),
+  },
+  {
+    path: '/:storeId/manage',
+    name: 'seller-dashboard',
+    component: () => import('../pages/SellerDashboardPage.vue'),
+  },
+  {
+    path: '/:storeId/manage/products',
+    name: 'manage-products',
+    component: () => import('../pages/StoreProductPage.vue'),
   },
   {
     path: '/:storeId/product/add',

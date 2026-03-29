@@ -41,7 +41,7 @@ async function handleSignIn() {
       query(collection(db, 'stores'), where('ownerUid', '==', authStore.user.uid))
     )
     if (!snap.empty) {
-      router.replace({ name: 'store', params: { storeId: snap.docs[0].id } })
+      router.replace({ name: 'seller-dashboard', params: { storeId: snap.docs[0].id } })
     } else {
       router.replace({ name: 'create-store' })
     }
