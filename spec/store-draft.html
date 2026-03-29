@@ -1,0 +1,637 @@
+<div
+  class="export-wrapper"
+  style="
+    width: 375px;
+    min-height: 812px;
+    position: relative;
+    font-family: var(--font-family-body);
+    background-color: var(--background);
+  "
+>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@100;200;300;400;500;600;700;800;900&family=Geist:wght@100;200;300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@100;200;300;400;500;600;700&family=IBM+Plex+Sans:wght@100;200;300;400;500;600;700&family=Inter:wght@100;200;300;400;500;600;700;800;900&family=Nunito:wght@200;300;400;500;600;700;800;900&family=PT+Serif:wght@400;700&family=Roboto+Slab:wght@100;200;300;400;500;600;700;800;900&family=Roboto:wght@100;300;400;500;700;900&family=Shantell+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <html>
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Mobile Catalog</title>
+      <style id="global-styles">
+        * {
+          box-sizing: border-box;
+          margin: 0;
+          padding: 0;
+        }
+        .export-wrapper {
+          background-color: var(--muted);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          min-height: 812px;
+          font-family: var(--font-family-body, sans-serif);
+          padding: 40px 0;
+        }
+      </style>
+      <style id="mobile-container-styles">
+        .mobile-wrapper {
+          width: 100%;
+          max-width: 375px;
+          background-color: var(--background);
+          min-height: 812px;
+          border-radius: 34px;
+          box-shadow: 0 16px 32px rgba(15, 23, 36, 0.08);
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          position: relative;
+          border: 6px solid #ececec;
+        }
+        .header {
+          padding: 22px 20px 18px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          background-color: var(--background);
+          position: sticky;
+          top: 0;
+          z-index: 10;
+        }
+        .header-title {
+          font-size: 18px;
+          font-weight: 600;
+          color: var(--foreground);
+        }
+        .header-actions {
+          display: flex;
+          gap: 8px;
+          align-items: center;
+        }
+        .icon-button {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background-color: transparent;
+          position: relative;
+          flex-shrink: 0;
+        }
+        .cart-sheet {
+          position: absolute;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: var(--card);
+          border-top-left-radius: 24px;
+          border-top-right-radius: 24px;
+          box-shadow: 0 -8px 24px rgba(15, 23, 36, 0.06);
+          padding: 12px 20px 18px;
+          z-index: 20;
+        }
+        .sheet-handle {
+          width: 36px;
+          height: 4px;
+          border-radius: 999px;
+          background-color: #e5e7eb;
+          margin: 0 auto 14px;
+        }
+        .cart-sheet-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+        }
+        .cart-sheet-left {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          min-width: 0;
+        }
+        .cart-sheet-label {
+          font-size: 13px;
+          font-weight: 500;
+          color: var(--muted-foreground);
+          white-space: nowrap;
+        }
+        .cart-sheet-total {
+          font-size: 20px;
+          font-weight: 600;
+          color: var(--foreground);
+          white-space: nowrap;
+        }
+        .cart-sheet-meta {
+          font-size: 13px;
+          font-weight: 500;
+          color: var(--foreground);
+          white-space: nowrap;
+        }
+        .cart-sheet-cta {
+          min-width: 136px;
+          height: 44px;
+          padding: 0 18px;
+          border-radius: var(--radius-xl);
+          background-color: var(--primary);
+          color: var(--primary-foreground);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          font-size: 15px;
+          font-weight: 500;
+          white-space: nowrap;
+          flex-shrink: 0;
+        }
+        .cart-sheet-count {
+          width: 22px;
+          height: 22px;
+          border-radius: 999px;
+          background-color: rgba(255, 255, 255, 0.18);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--primary-foreground);
+        }
+      </style>
+      <style id="catalog-styles">
+        .content-area {
+          flex: 1;
+          padding: 20px 20px 168px;
+          overflow-y: auto;
+          background-color: var(--background);
+        }
+        .categories {
+          display: flex;
+          gap: 12px;
+          margin-bottom: 20px;
+          overflow-x: auto;
+          padding-bottom: 8px;
+          scrollbar-width: none;
+        }
+        .categories::-webkit-scrollbar {
+          display: none;
+        }
+        .category-pill {
+          padding: 10px 16px;
+          border-radius: var(--radius-xl);
+          background-color: var(--secondary);
+          color: var(--secondary-foreground);
+          font-size: 14px;
+          font-weight: 500;
+          white-space: nowrap;
+        }
+        .category-pill.active {
+          background-color: var(--foreground);
+          color: var(--background);
+        }
+        .product-list {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 18px 16px;
+          padding-bottom: 8px;
+        }
+        .product-item {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          align-items: stretch;
+          min-width: 0;
+        }
+        .product-image-wrapper {
+          width: 100%;
+          aspect-ratio: 4 / 5;
+          border-radius: 10px;
+          background-color: var(--secondary);
+          overflow: hidden;
+          position: relative;
+        }
+        .product-image {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+        .product-details {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          min-width: 0;
+        }
+        .product-title {
+          font-size: 14px;
+          font-weight: 500;
+          color: var(--foreground);
+          line-height: 1.35;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+          min-height: 38px;
+        }
+        .product-bottom {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-top: 8px;
+          gap: 8px;
+        }
+        .product-price {
+          font-size: 15px;
+          font-weight: 600;
+          color: var(--foreground);
+          white-space: nowrap;
+        }
+        .add-to-cart-btn {
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          background-color: var(--primary);
+          color: var(--primary-foreground);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+        .brand-footer {
+          display: flex;
+          justify-content: center;
+          padding: 26px 0 8px;
+        }
+        .brand-footer-link {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 13px;
+          font-weight: 500;
+          color: var(--muted-foreground);
+          white-space: nowrap;
+        }
+        .brand-footer-name {
+          color: var(--foreground);
+          font-weight: 600;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="mobile-wrapper" id="catalog-screen">
+        <nav class="header" id="catalog-header">
+          <div
+            class="icon-button"
+            id="menu-button"
+            data-media-type="banani-button"
+          >
+            <div
+              style="
+                width: 24px;
+                height: 24px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              "
+            >
+              <iconify-icon
+                icon="lucide:menu"
+                style="font-size: 24px; color: var(--foreground)"
+              ></iconify-icon>
+            </div>
+          </div>
+          <div class="header-title" id="screen-title">Boutique</div>
+          <div class="header-actions" id="header-actions">
+            <div
+              class="icon-button"
+              id="search-button"
+              data-media-type="banani-button"
+            >
+              <div
+                style="
+                  width: 24px;
+                  height: 24px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                "
+              >
+                <iconify-icon
+                  icon="lucide:search"
+                  style="font-size: 20px; color: var(--foreground)"
+                ></iconify-icon>
+              </div>
+            </div>
+          </div>
+        </nav>
+
+        <main class="content-area" id="catalog-content">
+          <div class="categories" id="category-list">
+            <div class="category-pill active" data-media-type="banani-button">
+              All
+            </div>
+            <div class="category-pill" data-media-type="banani-button">
+              Decor
+            </div>
+            <div class="category-pill" data-media-type="banani-button">
+              Furniture
+            </div>
+            <div class="category-pill" data-media-type="banani-button">
+              Lighting
+            </div>
+            <div class="category-pill" data-media-type="banani-button">
+              Kitchen
+            </div>
+          </div>
+
+          <div class="product-list" id="product-list">
+            <div class="product-item" data-media-type="banani-button">
+              <div class="product-image-wrapper">
+                <img
+                  class="product-image"
+                  data-aspect-ratio="4:5"
+                  data-query="minimalist white ceramic vase on neutral background, elegant product photography, soft commerce palette, clean studio lighting"
+                  alt="Ceramic Vase"
+                  src="https://storage.googleapis.com/banani-generated-images/generated-images/16817b1b-72ea-41a5-8463-0f9be2eeba02.jpg"
+                />
+              </div>
+              <div class="product-details">
+                <div class="product-title">Ribbed Ceramic Vase</div>
+                <div class="product-bottom">
+                  <div class="product-price">$45.00</div>
+                  <div class="add-to-cart-btn" data-media-type="banani-button">
+                    <div
+                      style="
+                        width: 16px;
+                        height: 16px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                      "
+                    >
+                      <iconify-icon
+                        icon="lucide:plus"
+                        style="
+                          font-size: 16px;
+                          color: var(--primary-foreground);
+                        "
+                      ></iconify-icon>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="product-item" data-media-type="banani-button">
+              <div class="product-image-wrapper">
+                <img
+                  class="product-image"
+                  data-aspect-ratio="4:5"
+                  data-query="linen throw blanket folded neatly, earthy tones, natural light, soft commerce palette, clean product photography"
+                  alt="Throw Blanket"
+                  src="https://storage.googleapis.com/banani-generated-images/generated-images/5be7cd1e-4ab6-442f-a602-dee8d66d2bbe.jpg"
+                />
+              </div>
+              <div class="product-details">
+                <div class="product-title">Organic Linen Throw</div>
+                <div class="product-bottom">
+                  <div class="product-price">$85.00</div>
+                  <div class="add-to-cart-btn" data-media-type="banani-button">
+                    <div
+                      style="
+                        width: 16px;
+                        height: 16px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                      "
+                    >
+                      <iconify-icon
+                        icon="lucide:plus"
+                        style="
+                          font-size: 16px;
+                          color: var(--primary-foreground);
+                        "
+                      ></iconify-icon>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="product-item" data-media-type="banani-button">
+              <div class="product-image-wrapper">
+                <img
+                  class="product-image"
+                  data-aspect-ratio="4:5"
+                  data-query="modern wooden desk lamp, warm lighting, aesthetic desk setup, soft commerce palette, editorial product photography"
+                  alt="Desk Lamp"
+                  src="https://storage.googleapis.com/banani-generated-images/generated-images/6d4f6ba9-afbf-4219-a4cc-0840a7c8f1f3.jpg"
+                />
+              </div>
+              <div class="product-details">
+                <div class="product-title">Oak Wood Desk Lamp</div>
+                <div class="product-bottom">
+                  <div class="product-price">$120.00</div>
+                  <div class="add-to-cart-btn" data-media-type="banani-button">
+                    <div
+                      style="
+                        width: 16px;
+                        height: 16px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                      "
+                    >
+                      <iconify-icon
+                        icon="lucide:plus"
+                        style="
+                          font-size: 16px;
+                          color: var(--primary-foreground);
+                        "
+                      ></iconify-icon>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="product-item" data-media-type="banani-button">
+              <div class="product-image-wrapper">
+                <img
+                  class="product-image"
+                  data-aspect-ratio="4:5"
+                  data-query="matte black coffee mug, minimalist design, bright home interior, soft commerce palette, product photography"
+                  alt="Coffee Mug"
+                  src="https://storage.googleapis.com/banani-generated-images/generated-images/892a089f-a858-4f6c-965f-08c4ef66fda6.jpg"
+                />
+              </div>
+              <div class="product-details">
+                <div class="product-title">Matte Obsidian Mug</div>
+                <div class="product-bottom">
+                  <div class="product-price">$24.00</div>
+                  <div class="add-to-cart-btn" data-media-type="banani-button">
+                    <div
+                      style="
+                        width: 16px;
+                        height: 16px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                      "
+                    >
+                      <iconify-icon
+                        icon="lucide:plus"
+                        style="
+                          font-size: 16px;
+                          color: var(--primary-foreground);
+                        "
+                      ></iconify-icon>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="product-item" data-media-type="banani-button">
+              <div class="product-image-wrapper">
+                <img
+                  class="product-image"
+                  data-aspect-ratio="4:5"
+                  data-query="woven seagrass storage basket, home decor, airy living room, soft commerce palette, lifestyle product photography"
+                  alt="Storage Basket"
+                  src="https://storage.googleapis.com/banani-generated-images/generated-images/8e8fb627-d96f-434d-815c-44a1e54f8207.jpg"
+                />
+              </div>
+              <div class="product-details">
+                <div class="product-title">Woven Seagrass Basket</div>
+                <div class="product-bottom">
+                  <div class="product-price">$55.00</div>
+                  <div class="add-to-cart-btn" data-media-type="banani-button">
+                    <div
+                      style="
+                        width: 16px;
+                        height: 16px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                      "
+                    >
+                      <iconify-icon
+                        icon="lucide:plus"
+                        style="
+                          font-size: 16px;
+                          color: var(--primary-foreground);
+                        "
+                      ></iconify-icon>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="product-item" data-media-type="banani-button">
+              <div class="product-image-wrapper">
+                <img
+                  class="product-image"
+                  data-aspect-ratio="4:5"
+                  data-query="minimalist essential oil diffuser, sleek design, neutral styling, soft commerce palette, clean product photography"
+                  alt="Diffuser"
+                  src="https://storage.googleapis.com/banani-generated-images/generated-images/825968ea-7517-4190-a928-7ed674cfd717.jpg"
+                />
+              </div>
+              <div class="product-details">
+                <div class="product-title">Stone Oil Diffuser</div>
+                <div class="product-bottom">
+                  <div class="product-price">$68.00</div>
+                  <div class="add-to-cart-btn" data-media-type="banani-button">
+                    <div
+                      style="
+                        width: 16px;
+                        height: 16px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                      "
+                    >
+                      <iconify-icon
+                        icon="lucide:plus"
+                        style="
+                          font-size: 16px;
+                          color: var(--primary-foreground);
+                        "
+                      ></iconify-icon>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="brand-footer" id="brand-footer">
+            <div
+              class="brand-footer-link"
+              id="wardi-home-link"
+              data-media-type="banani-button"
+            >
+              <span>Powered by</span>
+              <span class="brand-footer-name">wardi</span>
+            </div>
+          </div>
+        </main>
+
+        <div class="cart-sheet" id="cart-sheet">
+          <div class="sheet-handle" id="sheet-handle"></div>
+          <div class="cart-sheet-row">
+            <div class="cart-sheet-left">
+              <div class="cart-sheet-label">Cart total</div>
+              <div class="cart-sheet-total">$130.00</div>
+              <div class="cart-sheet-meta">2 items ready to checkout</div>
+            </div>
+            <div
+              class="cart-sheet-cta"
+              id="view-cart-button"
+              data-media-type="banani-button"
+            >
+              <span>View cart</span>
+              <div class="cart-sheet-count">2</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </body>
+  </html>
+  <script src="https://code.iconify.design/iconify-icon/3.0.0/iconify-icon.min.js"></script>
+  <style>
+    :root {
+      --background: #ffffff;
+      --foreground: #0f1724;
+      --border: #00000014;
+      --input: #f8fafb;
+      --primary: #0066ff;
+      --primary-foreground: #ffffff;
+      --secondary: #f1f6ff;
+      --secondary-foreground: #0840a8;
+      --muted: #f3f4f6;
+      --muted-foreground: #94a3b8;
+      --success: #22c55e;
+      --success-foreground: #ffffff;
+      --accent: #ffd166;
+      --accent-foreground: #222222;
+      --destructive: #ef4444;
+      --destructive-foreground: #ffffff;
+      --warning: #f59e0b;
+      --warning-foreground: #111827;
+      --card: #ffffff;
+      --card-foreground: #0f1724;
+      --sidebar: #f8fafb;
+      --sidebar-foreground: #0b1220;
+      --sidebar-primary: #e6f0ff;
+      --sidebar-primary-foreground: #003eaa;
+      --radius-sm: 4px;
+      --radius-md: 6px;
+      --radius-lg: 8px;
+      --radius-xl: 12px;
+      --font-family-body: Inter;
+    }
+  </style>
+</div>

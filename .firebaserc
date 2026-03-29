@@ -1,0 +1,6 @@
+{
+  "projects": {
+    "staging": "wardi-stg",
+    "production": "wardi-prd"
+  }
+}

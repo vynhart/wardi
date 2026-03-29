@@ -1,0 +1,415 @@
+<div
+  class="export-wrapper"
+  style="
+    width: 375px;
+    min-height: 812px;
+    position: relative;
+    font-family: var(--font-family-body);
+    background-color: var(--background);
+  "
+>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@100;200;300;400;500;600;700;800;900&family=Geist:wght@100;200;300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@100;200;300;400;500;600;700&family=IBM+Plex+Sans:wght@100;200;300;400;500;600;700&family=Inter:wght@100;200;300;400;500;600;700;800;900&family=Nunito:wght@200;300;400;500;600;700;800;900&family=PT+Serif:wght@400;700&family=Roboto+Slab:wght@100;200;300;400;500;600;700;800;900&family=Roboto:wght@100;300;400;500;700;900&family=Shantell+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <html>
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Search Catalog</title>
+      <style id="global-styles">
+        * {
+          box-sizing: border-box;
+          margin: 0;
+          padding: 0;
+        }
+        .export-wrapper {
+          background-color: var(--muted);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          min-height: 812px;
+          font-family: var(--font-family-body, sans-serif);
+          padding: 40px 0;
+        }
+      </style>
+      <style id="mobile-container-styles">
+        .mobile-wrapper {
+          width: 100%;
+          max-width: 375px;
+          background-color: var(--background);
+          min-height: 812px;
+          border-radius: 40px;
+          box-shadow:
+            0 20px 40px rgba(0, 0, 0, 0.08),
+            0 1px 3px rgba(0, 0, 0, 0.05);
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          position: relative;
+          border: 8px solid var(--border);
+        }
+        .header {
+          padding: 16px 20px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          background-color: var(--background);
+          position: sticky;
+          top: 0;
+          z-index: 10;
+          border-bottom: 1px solid var(--border);
+          gap: 12px;
+        }
+        .icon-button {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background-color: transparent;
+          position: relative;
+          flex-shrink: 0;
+          margin-left: -8px;
+        }
+      </style>
+      <style id="search-styles">
+        .search-input-wrapper {
+          flex: 1;
+          height: 44px;
+          background-color: var(--secondary);
+          border-radius: var(--radius-xl);
+          display: flex;
+          align-items: center;
+          padding: 0 16px;
+          gap: 12px;
+        }
+        .search-input-placeholder {
+          flex: 1;
+          font-size: 15px;
+          color: var(--foreground);
+          font-weight: 500;
+          display: flex;
+          align-items: center;
+        }
+        .fake-cursor {
+          width: 2px;
+          height: 18px;
+          background-color: var(--primary);
+          margin-left: 2px;
+          border-radius: 2px;
+        }
+        .content-area {
+          flex: 1;
+          padding: 24px 20px;
+          overflow-y: auto;
+          background-color: var(--background);
+        }
+        .section-title {
+          font-size: 18px;
+          font-weight: 600;
+          color: var(--foreground);
+          margin-bottom: 16px;
+        }
+        .search-tags {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+          margin-bottom: 32px;
+        }
+        .search-tag {
+          padding: 8px 16px;
+          border-radius: var(--radius-xl);
+          background-color: var(--secondary);
+          color: var(--secondary-foreground);
+          font-size: 14px;
+          font-weight: 500;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .product-list {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+        }
+        .product-item {
+          display: flex;
+          gap: 16px;
+          align-items: center;
+          padding: 8px;
+          margin: -8px;
+          border-radius: var(--radius-lg);
+        }
+        .product-image-wrapper {
+          width: 64px;
+          flex-shrink: 0;
+          aspect-ratio: 1/1;
+          border-radius: var(--radius-md);
+          background-color: var(--secondary);
+          overflow: hidden;
+          position: relative;
+        }
+        .product-image {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+        .product-details {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          min-width: 0;
+          gap: 4px;
+        }
+        .product-title {
+          font-size: 16px;
+          font-weight: 500;
+          color: var(--foreground);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .product-price {
+          font-size: 14px;
+          font-weight: 600;
+          color: var(--muted-foreground);
+        }
+      </style>
+    </head>
+    <body>
+      <div class="mobile-wrapper" id="search-screen">
+        <nav class="header" id="search-header">
+          <div
+            class="icon-button"
+            id="back-button"
+            data-media-type="banani-button"
+          >
+            <div
+              style="
+                width: 24px;
+                height: 24px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              "
+            >
+              <iconify-icon
+                icon="lucide:arrow-left"
+                style="font-size: 24px; color: var(--foreground)"
+              ></iconify-icon>
+            </div>
+          </div>
+          <div class="search-input-wrapper">
+            <div
+              style="
+                width: 20px;
+                height: 20px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              "
+            >
+              <iconify-icon
+                icon="lucide:search"
+                style="font-size: 20px; color: var(--muted-foreground)"
+              ></iconify-icon>
+            </div>
+            <div class="search-input-placeholder">
+              <span style="color: var(--muted-foreground)">Search...</span>
+              <div class="fake-cursor"></div>
+            </div>
+          </div>
+        </nav>
+
+        <main class="content-area" id="search-content">
+          <div class="section-title">Recent Searches</div>
+          <div class="search-tags">
+            <div class="search-tag" data-media-type="banani-button">
+              <div
+                style="
+                  width: 16px;
+                  height: 16px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                "
+              >
+                <iconify-icon
+                  icon="lucide:clock"
+                  style="font-size: 16px; color: var(--secondary-foreground)"
+                ></iconify-icon>
+              </div>
+              Ceramic vase
+            </div>
+            <div class="search-tag" data-media-type="banani-button">
+              <div
+                style="
+                  width: 16px;
+                  height: 16px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                "
+              >
+                <iconify-icon
+                  icon="lucide:clock"
+                  style="font-size: 16px; color: var(--secondary-foreground)"
+                ></iconify-icon>
+              </div>
+              Linen throw
+            </div>
+            <div class="search-tag" data-media-type="banani-button">
+              <div
+                style="
+                  width: 16px;
+                  height: 16px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                "
+              >
+                <iconify-icon
+                  icon="lucide:clock"
+                  style="font-size: 16px; color: var(--secondary-foreground)"
+                ></iconify-icon>
+              </div>
+              Table lamp
+            </div>
+          </div>
+
+          <div class="section-title">Trending Now</div>
+          <div class="product-list" id="trending-list">
+            <div class="product-item" data-media-type="banani-button">
+              <div class="product-image-wrapper">
+                <img
+                  class="product-image"
+                  data-aspect-ratio="1:1"
+                  data-query="modern wooden desk lamp, warm lighting, aesthetic desk setup, soft commerce palette, editorial product photography"
+                  alt="Desk Lamp"
+                  src="https://storage.googleapis.com/banani-generated-images/generated-images/27771522-5ad4-4869-b645-5d5f5b314176.jpg"
+                />
+              </div>
+              <div class="product-details">
+                <div class="product-title">Oak Wood Desk Lamp</div>
+                <div class="product-price">$120.00</div>
+              </div>
+              <div
+                style="
+                  width: 20px;
+                  height: 20px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                "
+              >
+                <iconify-icon
+                  icon="lucide:arrow-up-right"
+                  style="font-size: 20px; color: var(--muted-foreground)"
+                ></iconify-icon>
+              </div>
+            </div>
+
+            <div class="product-item" data-media-type="banani-button">
+              <div class="product-image-wrapper">
+                <img
+                  class="product-image"
+                  data-aspect-ratio="1:1"
+                  data-query="woven seagrass storage basket, home decor, airy living room, soft commerce palette, lifestyle product photography"
+                  alt="Storage Basket"
+                  src="https://storage.googleapis.com/banani-generated-images/generated-images/ef02bbee-aa70-4611-b821-c5110920c2ad.jpg"
+                />
+              </div>
+              <div class="product-details">
+                <div class="product-title">Woven Seagrass Basket</div>
+                <div class="product-price">$55.00</div>
+              </div>
+              <div
+                style="
+                  width: 20px;
+                  height: 20px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                "
+              >
+                <iconify-icon
+                  icon="lucide:arrow-up-right"
+                  style="font-size: 20px; color: var(--muted-foreground)"
+                ></iconify-icon>
+              </div>
+            </div>
+
+            <div class="product-item" data-media-type="banani-button">
+              <div class="product-image-wrapper">
+                <img
+                  class="product-image"
+                  data-aspect-ratio="1:1"
+                  data-query="minimalist essential oil diffuser, sleek design, neutral styling, soft commerce palette, clean product photography"
+                  alt="Diffuser"
+                  src="https://storage.googleapis.com/banani-generated-images/generated-images/2c48afde-704c-4e85-b285-1a66af4899bd.jpg"
+                />
+              </div>
+              <div class="product-details">
+                <div class="product-title">Stone Oil Diffuser</div>
+                <div class="product-price">$68.00</div>
+              </div>
+              <div
+                style="
+                  width: 20px;
+                  height: 20px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                "
+              >
+                <iconify-icon
+                  icon="lucide:arrow-up-right"
+                  style="font-size: 20px; color: var(--muted-foreground)"
+                ></iconify-icon>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </body>
+  </html>
+  <script src="https://code.iconify.design/iconify-icon/3.0.0/iconify-icon.min.js"></script>
+  <style>
+    :root {
+      --background: #ffffff;
+      --foreground: #0f1724;
+      --border: #00000014;
+      --input: #f8fafb;
+      --primary: #0066ff;
+      --primary-foreground: #ffffff;
+      --secondary: #f1f6ff;
+      --secondary-foreground: #0840a8;
+      --muted: #f3f4f6;
+      --muted-foreground: #94a3b8;
+      --success: #22c55e;
+      --success-foreground: #ffffff;
+      --accent: #ffd166;
+      --accent-foreground: #222222;
+      --destructive: #ef4444;
+      --destructive-foreground: #ffffff;
+      --warning: #f59e0b;
+      --warning-foreground: #111827;
+      --card: #ffffff;
+      --card-foreground: #0f1724;
+      --sidebar: #f8fafb;
+      --sidebar-foreground: #0b1220;
+      --sidebar-primary: #e6f0ff;
+      --sidebar-primary-foreground: #003eaa;
+      --radius-sm: 4px;
+      --radius-md: 6px;
+      --radius-lg: 8px;
+      --radius-xl: 12px;
+      --font-family-body: Inter;
+    }
+  </style>
+</div>
