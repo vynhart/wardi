@@ -80,6 +80,11 @@ const routes = [
     component: () => import('../pages/CheckoutContactPage.vue'),
   },
   {
+    path: '/:storeId/order-success',
+    name: 'order-success',
+    component: () => import('../pages/OrderSuccessPage.vue'),
+  },
+  {
     path: '/:storeId/manage/orders',
     name: 'seller-orders',
     component: () => import('../pages/SellerOrdersPage.vue'),

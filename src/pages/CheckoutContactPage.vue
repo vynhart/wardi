@@ -93,6 +93,8 @@ async function placeOrder() {
 
   submitting.value = true
 
+  const orderNumber = 10000 + Math.floor(Date.now() % 90000)
+
   try {
     await addDoc(collection(db, 'stores', storeId, 'orders'), {
       buyerName: name.value.trim(),
@@ -102,32 +104,29 @@ async function placeOrder() {
       shipping: SHIPPING,
       total: total.value,
       status: 'pending',
-      orderNumber: 10000 + Math.floor(Date.now() % 90000),
+      orderNumber,
       createdAt: serverTimestamp(),
     })
   } catch {
-    // order save failing should not block the WhatsApp flow
+    // order save failing should not block the success flow
   }
 
-  const lines = items.value.map(
-    (e) => `• ${e.product.name} ×${e.qty} — ${formatPrice(e.product.price * e.qty)}`
-  )
-  const message = [
-    `Hi! I'd like to place an order:`,
-    ...lines,
-    '',
-    `Subtotal: ${formatPrice(subtotal.value)}`,
-    `Shipping: ${formatPrice(SHIPPING)}`,
-    `Total: ${formatPrice(total.value)}`,
-    '',
-    `Name: ${name.value.trim()}`,
-    `Phone: ${phone.value.trim()}`,
-  ].join('\n')
-
-  window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank')
-
   cartStore.clearCart(storeId)
-  router.replace({ name: 'store', params: { storeId } })
+  router.replace({
+    name: 'order-success',
+    params: { storeId },
+    state: {
+      order: {
+        buyerName: name.value.trim(),
+        buyerPhone: phone.value.trim(),
+        orderNumber,
+        items: items.value.map((e) => ({ product: e.product, qty: e.qty })),
+        subtotal: subtotal.value,
+        shipping: SHIPPING,
+        total: total.value,
+      },
+    },
+  })
 }
 </script>
 
