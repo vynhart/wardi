@@ -102,6 +102,7 @@ async function placeOrder() {
       shipping: SHIPPING,
       total: total.value,
       status: 'pending',
+      orderNumber: 10000 + Math.floor(Date.now() % 90000),
       createdAt: serverTimestamp(),
     })
   } catch {

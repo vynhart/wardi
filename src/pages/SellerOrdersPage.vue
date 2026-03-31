@@ -1,46 +1,81 @@
 <template>
   <div class="page">
+    <!-- Header -->
     <header class="header">
       <span class="header-title">Orders</span>
+      <button class="icon-button" @click="searchOpen = !searchOpen">
+        <iconify-icon icon="lucide:search" style="font-size: 24px; color: var(--foreground)" />
+      </button>
     </header>
 
+    <!-- Search bar -->
+    <div v-if="searchOpen" class="search-bar">
+      <iconify-icon icon="lucide:search" style="font-size: 16px; color: var(--muted-foreground)" />
+      <input
+        v-model="searchQuery"
+        class="search-input"
+        placeholder="Search by buyer name…"
+        autofocus
+      />
+      <button v-if="searchQuery" @click="searchQuery = ''">
+        <iconify-icon icon="lucide:x" style="font-size: 16px; color: var(--muted-foreground)" />
+      </button>
+    </div>
+
     <main class="main-content">
+      <!-- Filter tabs -->
+      <div class="filter-tabs-container">
+        <div class="filter-tabs">
+          <button
+            v-for="tab in tabs"
+            :key="tab.value"
+            class="filter-tab"
+            :class="{ active: activeTab === tab.value }"
+            @click="activeTab = tab.value"
+          >{{ tab.label }}</button>
+        </div>
+      </div>
+
+      <!-- Loading -->
       <div v-if="loading" class="empty-state">
         <iconify-icon icon="lucide:loader-circle" class="spin" style="font-size: 32px; color: var(--muted-foreground)" />
       </div>
 
-      <div v-else-if="orders.length === 0" class="empty-state">
-        <iconify-icon icon="lucide:inbox" style="font-size: 48px; color: var(--muted-foreground)" />
+      <!-- Empty -->
+      <div v-else-if="filteredOrders.length === 0" class="empty-state">
+        <iconify-icon icon="lucide:inbox" style="font-size: 40px; color: var(--muted-foreground)" />
         <p class="empty-title">No orders yet</p>
         <p class="empty-sub">Orders placed through your store will appear here.</p>
       </div>
 
+      <!-- Orders list -->
       <div v-else class="orders-list">
         <div
-          v-for="order in orders"
+          v-for="order in filteredOrders"
           :key="order.id"
           class="order-card"
           @click="selectedOrder = order"
         >
-          <div class="order-top">
-            <div class="order-buyer">
-              <div class="buyer-avatar">{{ initials(order.buyerName) }}</div>
-              <div class="buyer-info">
-                <div class="buyer-name">{{ order.buyerName }}</div>
-                <div class="buyer-phone">{{ order.buyerPhone }}</div>
+          <!-- Card header: ID + date | status -->
+          <div class="order-header">
+            <div class="order-id-date">
+              <span class="order-id">#{{ order.orderNumber ?? order.id.slice(0, 5).toUpperCase() }}</span>
+              <span class="order-date">{{ formatDate(order.createdAt) }}</span>
+            </div>
+            <span class="order-status" :class="order.status">{{ statusLabel(order.status) }}</span>
+          </div>
+
+          <!-- Card body: buyer | total -->
+          <div class="order-body">
+            <div class="customer-info">
+              <div class="customer-avatar">{{ initials(order.buyerName) }}</div>
+              <div class="customer-details">
+                <span class="customer-name">{{ order.buyerName }}</span>
+                <span class="order-items-count">{{ itemsSummary(order) }}</span>
               </div>
             </div>
-            <span class="status-badge" :class="`status--${order.status}`">
-              {{ statusLabel(order.status) }}
-            </span>
+            <div class="order-total">{{ formatPrice(order.total) }}</div>
           </div>
-
-          <div class="order-meta">
-            <span class="order-items-count">{{ itemsSummary(order) }}</span>
-            <span class="order-total">{{ formatPrice(order.total) }}</span>
-          </div>
-
-          <div class="order-date">{{ formatDate(order.createdAt) }}</div>
         </div>
       </div>
     </main>
@@ -51,7 +86,7 @@
         <div class="sheet-handle"></div>
 
         <div class="sheet-buyer-row">
-          <div class="buyer-avatar buyer-avatar--lg">{{ initials(selectedOrder.buyerName) }}</div>
+          <div class="customer-avatar customer-avatar--lg">{{ initials(selectedOrder.buyerName) }}</div>
           <div>
             <div class="buyer-name">{{ selectedOrder.buyerName }}</div>
             <a :href="`tel:${selectedOrder.buyerPhone}`" class="buyer-phone-link">
@@ -69,16 +104,13 @@
 
         <div class="sheet-totals">
           <div class="sheet-total-row">
-            <span>Subtotal</span>
-            <span>{{ formatPrice(selectedOrder.subtotal) }}</span>
+            <span>Subtotal</span><span>{{ formatPrice(selectedOrder.subtotal) }}</span>
           </div>
           <div class="sheet-total-row">
-            <span>Shipping</span>
-            <span>{{ formatPrice(selectedOrder.shipping) }}</span>
+            <span>Shipping</span><span>{{ formatPrice(selectedOrder.shipping) }}</span>
           </div>
           <div class="sheet-total-row sheet-total-row--total">
-            <span>Total</span>
-            <span>{{ formatPrice(selectedOrder.total) }}</span>
+            <span>Total</span><span>{{ formatPrice(selectedOrder.total) }}</span>
           </div>
         </div>
 
@@ -91,7 +123,7 @@
             <iconify-icon icon="lucide:message-circle" style="font-size: 18px" />
             Contact Buyer
           </a>
-          <div class="status-actions">
+          <div v-if="nextStatuses(selectedOrder.status).length" class="status-actions">
             <button
               v-for="s in nextStatuses(selectedOrder.status)"
               :key="s.value"
@@ -127,7 +159,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { collection, onSnapshot, doc, updateDoc, query, orderBy } from 'firebase/firestore'
 import { db } from '../firebase/index.js'
@@ -139,18 +171,36 @@ const storeId = route.params.storeId
 const orders = ref([])
 const loading = ref(true)
 const selectedOrder = ref(null)
+const activeTab = ref('all')
+const searchOpen = ref(false)
+const searchQuery = ref('')
+
+const tabs = [
+  { label: 'All Orders', value: 'all' },
+  { label: 'Pending', value: 'pending' },
+  { label: 'Confirmed', value: 'confirmed' },
+  { label: 'Completed', value: 'completed' },
+  { label: 'Cancelled', value: 'cancelled' },
+]
+
+const filteredOrders = computed(() => {
+  let list = orders.value
+  if (activeTab.value !== 'all') list = list.filter((o) => o.status === activeTab.value)
+  const q = searchQuery.value.trim().toLowerCase()
+  if (q) list = list.filter((o) => o.buyerName?.toLowerCase().includes(q))
+  return list
+})
 
 let unsubscribe = null
 
 onMounted(() => {
-  const q = query(
-    collection(db, 'stores', storeId, 'orders'),
-    orderBy('createdAt', 'desc')
+  unsubscribe = onSnapshot(
+    query(collection(db, 'stores', storeId, 'orders'), orderBy('createdAt', 'desc')),
+    (snap) => {
+      orders.value = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+      loading.value = false
+    }
   )
-  unsubscribe = onSnapshot(q, (snap) => {
-    orders.value = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
-    loading.value = false
-  })
 })
 
 onUnmounted(() => unsubscribe?.())
@@ -162,7 +212,12 @@ function formatPrice(price) {
 function formatDate(ts) {
   if (!ts) return ''
   const d = ts.toDate ? ts.toDate() : new Date(ts)
-  return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(d)
+  const now = new Date()
+  const diffDays = Math.floor((now - d) / 86400000)
+  const timeStr = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+  if (diffDays === 0) return `Today, ${timeStr}`
+  if (diffDays === 1) return `Yesterday, ${timeStr}`
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ', ' + timeStr
 }
 
 function initials(name) {
@@ -205,31 +260,110 @@ function goToProfile() { router.push({ name: 'seller-profile', params: { storeId
   padding-bottom: 72px;
 }
 
+/* Header */
 .header {
-  padding: 20px;
+  padding: 16px 20px;
   display: flex;
+  justify-content: space-between;
   align-items: center;
   background-color: var(--background);
   position: sticky;
   top: 0;
   z-index: 10;
-  border-bottom: 1px solid var(--border);
 }
 
 .header-title {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 600;
   color: var(--foreground);
 }
 
-.main-content {
-  flex: 1;
-  padding: 20px;
+.icon-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
   display: flex;
-  flex-direction: column;
-  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  cursor: pointer;
+  margin-right: -8px;
 }
 
+/* Search */
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--border);
+  background-color: var(--background);
+}
+
+.search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 15px;
+  color: var(--foreground);
+  background: none;
+  font-family: inherit;
+}
+
+.search-input::placeholder {
+  color: var(--muted-foreground);
+}
+
+/* Main */
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  scrollbar-width: none;
+}
+
+.main-content::-webkit-scrollbar { display: none; }
+
+/* Filter tabs */
+.filter-tabs-container {
+  padding: 8px 0 16px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background-color: var(--background);
+  z-index: 5;
+}
+
+.filter-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 0 20px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.filter-tabs::-webkit-scrollbar { display: none; }
+
+.filter-tab {
+  padding: 8px 16px;
+  border-radius: var(--radius-xl);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  background-color: var(--muted);
+  white-space: nowrap;
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+}
+
+.filter-tab.active {
+  background-color: var(--foreground);
+  color: var(--background);
+}
+
+/* Empty / loading */
 .empty-state {
   flex: 1;
   display: flex;
@@ -237,8 +371,7 @@ function goToProfile() { router.push({ name: 'seller-profile', params: { storeId
   align-items: center;
   justify-content: center;
   gap: 12px;
-  padding: 60px 0;
-  color: var(--muted-foreground);
+  padding: 60px 20px;
   text-align: center;
 }
 
@@ -257,7 +390,9 @@ function goToProfile() { router.push({ name: 'seller-profile', params: { storeId
 @keyframes spin { to { transform: rotate(360deg) } }
 .spin { animation: spin 1s linear infinite; display: block; }
 
+/* Orders list */
 .orders-list {
+  padding: 16px 20px 24px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -270,80 +405,23 @@ function goToProfile() { router.push({ name: 'seller-profile', params: { storeId
   padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
   cursor: pointer;
 }
 
-.order-top {
+.order-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 12px;
 }
 
-.order-buyer {
+.order-id-date {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.buyer-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background-color: var(--secondary);
-  color: var(--secondary-foreground);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  font-weight: 600;
-  flex-shrink: 0;
-}
-
-.buyer-avatar--lg {
-  width: 44px;
-  height: 44px;
-  font-size: 15px;
-}
-
-.buyer-name {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--foreground);
-}
-
-.buyer-phone {
-  font-size: 13px;
-  color: var(--muted-foreground);
-  margin-top: 2px;
-}
-
-.status-badge {
-  font-size: 12px;
-  font-weight: 500;
-  padding: 4px 10px;
-  border-radius: var(--radius-sm);
-  flex-shrink: 0;
-}
-
-.status--pending { background-color: #fef9c3; color: #854d0e; }
-.status--confirmed { background-color: #dbeafe; color: #1e40af; }
-.status--completed { background-color: #dcfce7; color: #166534; }
-.status--cancelled { background-color: var(--muted); color: var(--muted-foreground); }
-
-.order-meta {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.order-items-count {
-  font-size: 14px;
-  color: var(--muted-foreground);
-}
-
-.order-total {
+.order-id {
   font-size: 15px;
   font-weight: 600;
   color: var(--foreground);
@@ -354,6 +432,91 @@ function goToProfile() { router.push({ name: 'seller-profile', params: { storeId
   color: var(--muted-foreground);
 }
 
+.order-status {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+}
+
+.order-status.pending {
+  background-color: var(--warning);
+  color: var(--warning-foreground);
+}
+
+.order-status.confirmed {
+  background-color: var(--secondary);
+  color: var(--secondary-foreground);
+}
+
+.order-status.completed {
+  background-color: var(--success);
+  color: var(--success-foreground);
+}
+
+.order-status.cancelled {
+  background-color: var(--destructive);
+  color: var(--destructive-foreground);
+}
+
+.order-body {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 16px;
+  border-top: 1px dashed var(--border);
+}
+
+.customer-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.customer-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: var(--muted);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--foreground);
+  flex-shrink: 0;
+}
+
+.customer-avatar--lg {
+  width: 44px;
+  height: 44px;
+  font-size: 15px;
+}
+
+.customer-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.customer-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--foreground);
+}
+
+.order-items-count {
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.order-total {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
 /* Bottom sheet */
 .overlay {
   position: fixed;
@@ -362,10 +525,12 @@ function goToProfile() { router.push({ name: 'seller-profile', params: { storeId
   z-index: 40;
   display: flex;
   align-items: flex-end;
+  justify-content: center;
 }
 
 .bottom-sheet {
   width: 100%;
+  max-width: 430px;
   background-color: var(--background);
   border-top-left-radius: 24px;
   border-top-right-radius: 24px;
@@ -387,6 +552,12 @@ function goToProfile() { router.push({ name: 'seller-profile', params: { storeId
   display: flex;
   align-items: center;
   gap: 14px;
+}
+
+.buyer-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--foreground);
 }
 
 .buyer-phone-link {
@@ -482,6 +653,8 @@ function goToProfile() { router.push({ name: 'seller-profile', params: { storeId
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
+  border: none;
+  font-family: inherit;
 }
 
 .status-action--confirmed, .status-action--completed {
@@ -498,28 +671,30 @@ function goToProfile() { router.push({ name: 'seller-profile', params: { storeId
 .bottom-nav {
   position: fixed;
   bottom: 0;
-  left: 0;
-  right: 0;
-  height: 72px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 430px;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 12px 0 24px;
   background-color: var(--background);
   border-top: 1px solid var(--border);
-  display: flex;
-  align-items: center;
   z-index: 30;
 }
 
 .nav-item {
-  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  padding: 8px 0;
   color: var(--muted-foreground);
   cursor: pointer;
   background: none;
   border: none;
   font-family: inherit;
+  width: 64px;
 }
 
 .nav-item.active {
