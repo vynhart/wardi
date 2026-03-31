@@ -12,7 +12,7 @@
     </div>
 
     <!-- Content -->
-    <main class="content-area" :style="hasCartItems ? 'padding-bottom: 168px' : 'padding-bottom: 100px'">
+    <main class="content-area" :style="{ paddingBottom: qtyInCart > 0 ? '168px' : '100px' }">
       <div v-if="loading" class="loading-state">Loading...</div>
       <div v-else-if="!product" class="loading-state">Product not found.</div>
       <template v-else>
@@ -59,21 +59,6 @@
       </template>
     </div>
 
-    <!-- Cart bottom sheet (when items from other products) -->
-    <div v-if="hasCartItems && qtyInCart === 0" class="cart-sheet">
-      <div class="sheet-handle"></div>
-      <div class="cart-sheet-row">
-        <div class="cart-sheet-left">
-          <div class="cart-sheet-label">Cart total</div>
-          <div class="cart-sheet-total">{{ formatPrice(subtotal) }}</div>
-          <div class="cart-sheet-meta">{{ itemCount }} {{ itemCount === 1 ? 'item' : 'items' }}</div>
-        </div>
-        <button class="cart-sheet-cta" @click="goToCart">
-          <span>View cart</span>
-          <div class="cart-sheet-count">{{ itemCount }}</div>
-        </button>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -106,8 +91,6 @@ onMounted(async () => {
 
 const items = cartStore.cartItems(storeId)
 const itemCount = cartStore.cartCount(storeId)
-const subtotal = cartStore.cartSubtotal(storeId)
-const hasCartItems = computed(() => itemCount.value > 0)
 
 const qtyInCart = computed(
   () => items.value.find((e) => e.product.id === productId)?.qty ?? 0
@@ -322,90 +305,6 @@ function goToCart() {
   align-items: center;
   justify-content: center;
   font-size: 13px;
-  font-weight: 600;
-}
-
-/* Cart sheet */
-.cart-sheet {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: var(--card);
-  border-top-left-radius: 24px;
-  border-top-right-radius: 24px;
-  box-shadow: 0 -8px 24px rgba(15, 23, 36, 0.06);
-  padding: 12px 20px 18px;
-  z-index: 20;
-}
-
-.sheet-handle {
-  width: 36px;
-  height: 4px;
-  border-radius: 999px;
-  background-color: #e5e7eb;
-  margin: 0 auto 14px;
-}
-
-.cart-sheet-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.cart-sheet-left {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-}
-
-.cart-sheet-label {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--muted-foreground);
-}
-
-.cart-sheet-total {
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--foreground);
-}
-
-.cart-sheet-meta {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--foreground);
-}
-
-.cart-sheet-cta {
-  min-width: 136px;
-  height: 44px;
-  padding: 0 18px;
-  border-radius: var(--radius-xl);
-  background-color: var(--primary);
-  color: var(--primary-foreground);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  font-size: 15px;
-  font-weight: 500;
-  white-space: nowrap;
-  flex-shrink: 0;
-  cursor: pointer;
-}
-
-.cart-sheet-count {
-  width: 22px;
-  height: 22px;
-  border-radius: 999px;
-  background-color: rgba(255, 255, 255, 0.18);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
   font-weight: 600;
 }
 
