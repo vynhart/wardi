@@ -86,7 +86,7 @@
         <iconify-icon icon="lucide:layout-grid" style="font-size: 24px; color: inherit" />
         <span class="nav-label">Dashboard</span>
       </button>
-      <button class="nav-item">
+      <button class="nav-item" @click="goToOrders">
         <iconify-icon icon="lucide:inbox" style="font-size: 24px; color: inherit" />
         <span class="nav-label">Orders</span>
       </button>
@@ -94,7 +94,7 @@
         <iconify-icon icon="lucide:tag" style="font-size: 24px; color: inherit" />
         <span class="nav-label">Products</span>
       </button>
-      <button class="nav-item">
+      <button class="nav-item" @click="goToProfile">
         <iconify-icon icon="lucide:user" style="font-size: 24px; color: inherit" />
         <span class="nav-label">Profile</span>
       </button>
@@ -185,6 +185,14 @@ function goToEdit(product) {
 
 function goToDashboard() {
   router.push({ name: 'seller-dashboard', params: { storeId } })
+}
+
+function goToOrders() {
+  router.push({ name: 'seller-orders', params: { storeId } })
+}
+
+function goToProfile() {
+  router.push({ name: 'seller-profile', params: { storeId } })
 }
 </script>
 

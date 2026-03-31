@@ -106,18 +106,7 @@ function removeItem(productId) {
 }
 
 function checkout() {
-  const lines = items.value.map(
-    (e) => `• ${e.product.name} x${e.qty} — ${formatPrice(e.product.price * e.qty)}`
-  )
-  const message = [
-    'Hi! I would like to order:',
-    ...lines,
-    '',
-    `Total: ${formatPrice(total.value)}`,
-  ].join('\n')
-
-  const waUrl = `https://wa.me/?text=${encodeURIComponent(message)}`
-  window.open(waUrl, '_blank')
+  router.push({ name: 'checkout', params: { storeId } })
 }
 </script>
 

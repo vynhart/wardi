@@ -74,6 +74,23 @@ const routes = [
     name: 'product-detail',
     component: () => import('../pages/ProductDetailPage.vue'),
   },
+  {
+    path: '/:storeId/checkout',
+    name: 'checkout',
+    component: () => import('../pages/CheckoutContactPage.vue'),
+  },
+  {
+    path: '/:storeId/manage/orders',
+    name: 'seller-orders',
+    component: () => import('../pages/SellerOrdersPage.vue'),
+    meta: { requiresSeller: true },
+  },
+  {
+    path: '/:storeId/manage/profile',
+    name: 'seller-profile',
+    component: () => import('../pages/SellerProfilePage.vue'),
+    meta: { requiresSeller: true },
+  },
 ]
 
 const router = createRouter({

@@ -75,5 +75,10 @@ export const useCartStore = defineStore('cart', () => {
     )
   }
 
-  return { carts, addItem, setQty, removeItem, cartItems, cartCount, cartSubtotal }
+  function clearCart(storeId) {
+    carts.value[storeId] = {}
+    saveToStorage(carts.value)
+  }
+
+  return { carts, addItem, setQty, removeItem, cartItems, cartCount, cartSubtotal, clearCart }
 })

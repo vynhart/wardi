@@ -23,7 +23,7 @@
               <iconify-icon icon="lucide:dollar-sign" style="font-size: 16px; color: var(--foreground)" />
             </div>
           </div>
-          <div class="metric-value">$0.00</div>
+          <div class="metric-value">{{ formatPrice(totalRevenue) }}</div>
         </div>
         <div class="metric-card">
           <div class="metric-header">
@@ -32,7 +32,7 @@
               <iconify-icon icon="lucide:shopping-bag" style="font-size: 16px; color: var(--foreground)" />
             </div>
           </div>
-          <div class="metric-value">0</div>
+          <div class="metric-value">{{ totalOrders }}</div>
         </div>
         <div class="metric-card">
           <div class="metric-header">
@@ -85,9 +85,18 @@
           <h2 class="section-title">Recent Orders</h2>
           <button class="view-all" @click="goToOrders">View All</button>
         </div>
-        <div class="empty-orders">
+        <div v-if="recentOrders.length === 0" class="empty-orders">
           <iconify-icon icon="lucide:inbox" style="font-size: 32px; color: var(--muted-foreground)" />
           <span class="empty-orders-text">No recent orders yet</span>
+        </div>
+        <div v-else class="recent-orders-list">
+          <div v-for="order in recentOrders" :key="order.id" class="recent-order-item" @click="goToOrders">
+            <div class="recent-order-buyer">{{ order.buyerName }}</div>
+            <div class="recent-order-right">
+              <span class="recent-order-total">{{ formatPrice(order.total) }}</span>
+              <span class="recent-order-status" :class="`status--${order.status}`">{{ order.status }}</span>
+            </div>
+          </div>
         </div>
       </section>
     </main>
@@ -106,7 +115,7 @@
         <iconify-icon icon="lucide:tag" style="font-size: 24px; color: inherit" />
         <span class="nav-label">Products</span>
       </button>
-      <button class="nav-item">
+      <button class="nav-item" @click="goToProfile">
         <iconify-icon icon="lucide:user" style="font-size: 24px; color: inherit" />
         <span class="nav-label">Profile</span>
       </button>
@@ -115,9 +124,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { doc, getDoc } from 'firebase/firestore'
+import { doc, getDoc, collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore'
 import { db } from '../firebase/index.js'
 import { useAuthStore } from '../stores/auth.js'
 
@@ -127,6 +136,11 @@ const authStore = useAuthStore()
 
 const storeId = route.params.storeId
 const storeName = ref('Store Owner')
+const totalOrders = ref(0)
+const totalRevenue = ref(0)
+const recentOrders = ref([])
+
+let unsubscribe = null
 
 onMounted(async () => {
   if (!authStore.user) {
@@ -141,7 +155,23 @@ onMounted(async () => {
   if (storeSnap.data().name) {
     storeName.value = storeSnap.data().name
   }
+
+  unsubscribe = onSnapshot(
+    query(collection(db, 'stores', storeId, 'orders'), orderBy('createdAt', 'desc')),
+    (snap) => {
+      const orders = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+      totalOrders.value = orders.length
+      totalRevenue.value = orders.reduce((s, o) => s + (o.total ?? 0), 0)
+      recentOrders.value = orders.slice(0, 3)
+    }
+  )
 })
+
+onUnmounted(() => unsubscribe?.())
+
+function formatPrice(price) {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(price ?? 0)
+}
 
 function goToProducts() {
   router.push({ name: 'manage-products', params: { storeId } })
@@ -156,7 +186,11 @@ function goToStore() {
 }
 
 function goToOrders() {
-  // orders page not yet implemented
+  router.push({ name: 'seller-orders', params: { storeId } })
+}
+
+function goToProfile() {
+  router.push({ name: 'seller-profile', params: { storeId } })
 }
 
 function shareStore() {
@@ -366,6 +400,66 @@ function shareStore() {
   color: var(--muted-foreground);
   font-weight: 500;
 }
+
+.recent-orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.recent-order-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background-color: var(--card);
+  cursor: pointer;
+  gap: 12px;
+}
+
+.recent-order-item + .recent-order-item {
+  border-top: 1px solid var(--border);
+}
+
+.recent-order-buyer {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--foreground);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recent-order-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.recent-order-total {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.recent-order-status {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  text-transform: capitalize;
+}
+
+.status--pending { background-color: #fef9c3; color: #854d0e; }
+.status--confirmed { background-color: #dbeafe; color: #1e40af; }
+.status--completed { background-color: #dcfce7; color: #166534; }
+.status--cancelled { background-color: var(--muted); color: var(--muted-foreground); }
 
 .bottom-nav {
   display: flex;
