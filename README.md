@@ -2,6 +2,14 @@
 
 Mobile web storefront for WhatsApp sellers. Sellers share a link to their store; buyers browse products, add to cart, and checkout. Then communicate to seller via WhatsApp.
 
+## Project Tracker
+
+Progress and tasks are tracked in Notion: [Wardi.id — Notion](https://www.notion.so/33002f7af6c38091a962ef7cc9e865c2)
+
+The `project/` directory contains a local mirror for quick reference:
+- [`project/overview.md`](project/overview.md) — what the project is, screens, data model, workflow
+- [`project/progress.md`](project/progress.md) — read-only snapshot of task state, kept in sync with Notion after each task
+
 ## Tech Stack
 
 - [Vue 3](https://vuejs.org/) + [Vite](https://vitejs.dev/)
