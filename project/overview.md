@@ -49,6 +49,7 @@ Non-visual work (backend logic, bug fixes with no UI change, Firestore rules) is
 | Backend | Firebase — Firestore + Auth + Storage |
 | Icons | Iconify (CDN) |
 | Theming | CSS variables (`src/assets/theme.css`) |
+| Testing | Vitest (unit tests, Firebase fully mocked) |
 
 ## Firestore Data Model
 

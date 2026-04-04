@@ -1,6 +1,6 @@
 # Wardi — Progress Tracker
 
-_Last updated: 2026-04-03 (synced with Notion)_
+_Last updated: 2026-04-04 (synced with Notion)_
 
 ## Status Legend
 - [x] Done
@@ -46,6 +46,13 @@ _Last updated: 2026-04-03 (synced with Notion)_
 - [x] Order lifecycle management — accept/reject, then complete/cancel
 - [x] WhatsApp "Contact Buyer" CTA on seller's order detail page
 - [x] Seller profile page
+
+---
+
+## Testing
+
+- [x] Vitest unit test suite — 56 tests across 8 files (cart store, auth store, formatPrice, toCdnUrl, CheckoutContactPage, SearchPage, CartPage, QtyControl)
+- [x] Firebase and localStorage fully mocked — tests run offline
 
 ---
 
