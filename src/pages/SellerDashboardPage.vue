@@ -124,11 +124,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useFirestoreListeners } from '../composables/useFirestoreListeners.js'
 import { useRoute, useRouter } from 'vue-router'
 import { doc, getDoc, collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore'
 import { db } from '../firebase/index.js'
 import { useAuthStore } from '../stores/auth.js'
+import { formatPrice } from '../utils/format.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -140,7 +142,7 @@ const totalOrders = ref(0)
 const totalRevenue = ref(0)
 const recentOrders = ref([])
 
-let unsubscribe = null
+const { addListener } = useFirestoreListeners()
 
 onMounted(async () => {
   if (!authStore.user) {
@@ -156,7 +158,7 @@ onMounted(async () => {
     storeName.value = storeSnap.data().name
   }
 
-  unsubscribe = onSnapshot(
+  addListener(onSnapshot(
     query(collection(db, 'stores', storeId, 'orders'), orderBy('createdAt', 'desc')),
     (snap) => {
       const orders = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
@@ -164,14 +166,8 @@ onMounted(async () => {
       totalRevenue.value = orders.reduce((s, o) => s + (o.total ?? 0), 0)
       recentOrders.value = orders.slice(0, 3)
     }
-  )
+  ))
 })
-
-onUnmounted(() => unsubscribe?.())
-
-function formatPrice(price) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(price ?? 0)
-}
 
 function goToProducts() {
   router.push({ name: 'manage-products', params: { storeId } })

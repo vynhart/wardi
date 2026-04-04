@@ -104,6 +104,7 @@ import { collection, getDocs } from 'firebase/firestore'
 import { db } from '../firebase/index.js'
 import IconButton from '../components/IconButton.vue'
 import { toCdnUrl } from '../utils/storage.js'
+import { formatPrice } from '../utils/format.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -147,10 +148,6 @@ const results = computed(() => {
 })
 
 const trendingProducts = computed(() => products.value.slice(0, 5))
-
-function formatPrice(price) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(price)
-}
 
 function onInput() {
   // intentionally empty — v-model handles reactivity

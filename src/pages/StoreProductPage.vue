@@ -103,13 +103,15 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useFirestoreListeners } from '../composables/useFirestoreListeners.js'
 import { useRoute, useRouter } from 'vue-router'
 import { doc, collection, onSnapshot, getDoc } from 'firebase/firestore'
 import { db } from '../firebase/index.js'
 import { useAuthStore } from '../stores/auth.js'
 import IconButton from '../components/IconButton.vue'
 import { toCdnUrl } from '../utils/storage.js'
+import { formatPrice } from '../utils/format.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -128,7 +130,7 @@ const filterPills = [
   { label: 'Out of Stock', value: 'out-of-stock' },
 ]
 
-let unsubProducts = null
+const { addListener } = useFirestoreListeners()
 
 onMounted(async () => {
   // Guard: must be authenticated and own the store
@@ -142,14 +144,10 @@ onMounted(async () => {
     return
   }
 
-  unsubProducts = onSnapshot(collection(db, 'stores', storeId, 'products'), (snap) => {
+  addListener(onSnapshot(collection(db, 'stores', storeId, 'products'), (snap) => {
     products.value = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
     loading.value = false
-  })
-})
-
-onUnmounted(() => {
-  unsubProducts?.()
+  }))
 })
 
 const filteredProducts = computed(() => {
@@ -170,10 +168,6 @@ const filteredProducts = computed(() => {
 
   return list
 })
-
-function formatPrice(price) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(price ?? 0)
-}
 
 function goToAdd() {
   router.push({ name: 'product-add', params: { storeId } })

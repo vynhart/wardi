@@ -81,8 +81,8 @@ import { useCartStore } from '../stores/cart.js'
 import IconButton from '../components/IconButton.vue'
 import QtyControl from '../components/QtyControl.vue'
 import { toCdnUrl } from '../utils/storage.js'
-
-const SHIPPING = 10
+import { formatPrice } from '../utils/format.js'
+import { SHIPPING } from '../utils/constants.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -92,10 +92,6 @@ const storeId = route.params.storeId
 const items = cartStore.cartItems(storeId)
 const subtotal = cartStore.cartSubtotal(storeId)
 const total = computed(() => subtotal.value + SHIPPING)
-
-function formatPrice(price) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(price)
-}
 
 function changeQty(productId, newQty) {
   cartStore.setQty(storeId, productId, newQty)

@@ -68,6 +68,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from '../firebase/index.js'
 import { toCdnUrl } from '../utils/storage.js'
+import { formatPrice } from '../utils/format.js'
 import { useCartStore } from '../stores/cart.js'
 import QtyControl from '../components/QtyControl.vue'
 
@@ -95,10 +96,6 @@ const itemCount = cartStore.cartCount(storeId)
 const qtyInCart = computed(
   () => items.value.find((e) => e.product.id === productId)?.qty ?? 0
 )
-
-function formatPrice(price) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(price ?? 0)
-}
 
 function addToCart() {
   cartStore.addItem(storeId, product.value)

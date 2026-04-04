@@ -65,6 +65,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { formatPrice } from '../utils/format.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -84,10 +85,6 @@ const order = window.history.state?.order ?? {
 const formattedDate = new Intl.DateTimeFormat('en-US', {
   month: 'short', day: 'numeric', year: 'numeric',
 }).format(new Date())
-
-function formatPrice(price) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(price ?? 0)
-}
 
 function goToStore() {
   router.replace({ name: 'store', params: { storeId } })

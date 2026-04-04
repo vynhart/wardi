@@ -78,72 +78,39 @@
     </div>
 
     <!-- Seller menu overlay (owner only) -->
-    <div v-if="sellerMenuOpen && isOwner" class="overlay" @click="sellerMenuOpen = false">
-      <div class="seller-menu" @click.stop>
-        <p class="seller-menu-hint">Seller</p>
-        <button class="seller-menu-btn" @click="goToDashboard">
-          <iconify-icon icon="lucide:layout-grid" style="font-size: 18px" />
-          Seller Dashboard
-        </button>
-        <button class="seller-menu-btn seller-menu-btn--danger" @click="handleSignOut">
-          <iconify-icon icon="lucide:log-out" style="font-size: 18px" />
-          Sign out
-        </button>
-      </div>
-    </div>
+    <SellerMenu
+      v-if="sellerMenuOpen && isOwner"
+      @close="sellerMenuOpen = false"
+      @dashboard="goToDashboard"
+      @sign-out="handleSignOut"
+    />
 
     <!-- Buyer drawer (non-owners) -->
-    <Transition name="drawer-overlay-fade">
-      <div v-if="buyerDrawerOpen && !isOwner" class="drawer-overlay" @click="buyerDrawerOpen = false" />
-    </Transition>
-    <Transition name="drawer-slide">
-      <div v-if="buyerDrawerOpen && !isOwner" class="drawer-panel">
-        <div class="drawer-header">
-          <span class="drawer-title">Menu</span>
-          <button class="drawer-close" @click="buyerDrawerOpen = false">
-            <iconify-icon icon="lucide:x" style="font-size: 20px; color: var(--secondary-foreground)" />
-          </button>
-        </div>
-        <nav class="drawer-nav">
-          <button class="drawer-nav-item" @click="buyerDrawerOpen = false">
-            <div class="drawer-nav-item-left">
-              <iconify-icon icon="lucide:store" style="font-size: 20px; color: var(--muted-foreground)" />
-              <span class="drawer-nav-label">Catalog</span>
-            </div>
-          </button>
-          <button class="drawer-nav-item" @click="openCart">
-            <div class="drawer-nav-item-left">
-              <iconify-icon icon="lucide:package" style="font-size: 20px; color: var(--muted-foreground)" />
-              <span class="drawer-nav-label">My Orders</span>
-            </div>
-            <span v-if="hasCartItems" class="drawer-nav-badge">{{ itemCount }} Active</span>
-          </button>
-          <button class="drawer-nav-item" @click="contactSeller">
-            <div class="drawer-nav-item-left">
-              <iconify-icon icon="lucide:message-circle" style="font-size: 20px; color: var(--muted-foreground)" />
-              <span class="drawer-nav-label">Contact Seller</span>
-            </div>
-          </button>
-        </nav>
-        <div class="drawer-footer">
-          <RouterLink to="/" class="drawer-footer-link" @click="buyerDrawerOpen = false">
-            Powered by <span class="drawer-footer-bold">wardi</span>
-          </RouterLink>
-        </div>
-      </div>
-    </Transition>
+    <BuyerDrawer
+      v-if="!isOwner"
+      :open="buyerDrawerOpen"
+      :item-count="itemCount"
+      :has-cart-items="hasCartItems"
+      @close="buyerDrawerOpen = false"
+      @go-to-cart="openCart"
+      @contact-seller="contactSeller"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useFirestoreListeners } from '../composables/useFirestoreListeners.js'
 import { useRoute, useRouter } from 'vue-router'
 import { doc, collection, onSnapshot } from 'firebase/firestore'
 import { db } from '../firebase/index.js'
 import { useCartStore } from '../stores/cart.js'
 import { useAuthStore } from '../stores/auth.js'
 import IconButton from '../components/IconButton.vue'
+import SellerMenu from '../components/SellerMenu.vue'
+import BuyerDrawer from '../components/BuyerDrawer.vue'
 import { toCdnUrl } from '../utils/storage.js'
+import { formatPrice } from '../utils/format.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -159,26 +126,19 @@ const selectedCategory = ref('All')
 const sellerMenuOpen = ref(false)
 const buyerDrawerOpen = ref(false)
 
-// Firestore listeners
-let unsubStore = null
-let unsubProducts = null
+const { addListener } = useFirestoreListeners()
 
 onMounted(() => {
-  unsubStore = onSnapshot(doc(db, 'stores', storeId), (snap) => {
+  addListener(onSnapshot(doc(db, 'stores', storeId), (snap) => {
     if (snap.exists()) {
       store.value = { id: snap.id, ...snap.data() }
     }
-  })
+  }))
 
-  unsubProducts = onSnapshot(collection(db, 'stores', storeId, 'products'), (snap) => {
+  addListener(onSnapshot(collection(db, 'stores', storeId, 'products'), (snap) => {
     products.value = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
     loading.value = false
-  })
-})
-
-onUnmounted(() => {
-  unsubStore?.()
-  unsubProducts?.()
+  }))
 })
 
 const isOwner = computed(
@@ -201,10 +161,6 @@ const items = cartStore.cartItems(storeId)
 const itemCount = cartStore.cartCount(storeId)
 const subtotal = cartStore.cartSubtotal(storeId)
 const hasCartItems = computed(() => itemCount.value > 0)
-
-function formatPrice(price) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(price)
-}
 
 function addToCart(product) {
   cartStore.addItem(storeId, product)
@@ -504,52 +460,6 @@ async function handleSignOut() {
   color: var(--primary-foreground);
 }
 
-/* Seller menu */
-.overlay {
-  position: fixed;
-  inset: 0;
-  background-color: rgba(0, 0, 0, 0.4);
-  z-index: 30;
-  display: flex;
-  align-items: flex-end;
-}
-
-.seller-menu {
-  width: 100%;
-  background-color: var(--background);
-  border-top-left-radius: 24px;
-  border-top-right-radius: 24px;
-  padding: 20px 20px 36px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.seller-menu-hint {
-  font-size: 13px;
-  color: var(--muted-foreground);
-  margin-bottom: 4px;
-}
-
-.seller-menu-btn {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  padding: 14px 16px;
-  border-radius: var(--radius-lg);
-  background-color: var(--secondary);
-  color: var(--foreground);
-  font-size: 15px;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.seller-menu-btn--danger {
-  background-color: transparent;
-  color: var(--destructive);
-}
-
 /* States */
 .loading-state,
 .empty-state {
@@ -559,136 +469,4 @@ async function handleSignOut() {
   color: var(--muted-foreground);
 }
 
-/* Buyer drawer */
-.drawer-overlay {
-  position: fixed;
-  inset: 0;
-  background-color: rgba(15, 23, 36, 0.45);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
-  z-index: 40;
-}
-
-.drawer-panel {
-  position: fixed;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: 290px;
-  background-color: var(--background);
-  z-index: 41;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 4px 0 32px rgba(0, 0, 0, 0.12);
-  border-top-right-radius: 20px;
-  border-bottom-right-radius: 20px;
-}
-
-.drawer-header {
-  padding: 28px 24px 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.drawer-title {
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--foreground);
-}
-
-.drawer-close {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background-color: var(--secondary);
-  cursor: pointer;
-}
-
-.drawer-nav {
-  padding: 12px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  flex: 1;
-}
-
-.drawer-nav-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 16px;
-  border-radius: var(--radius-md);
-  background: none;
-  cursor: pointer;
-  width: 100%;
-  text-align: left;
-}
-
-.drawer-nav-item:hover {
-  background-color: var(--secondary);
-}
-
-.drawer-nav-item-left {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.drawer-nav-label {
-  font-size: 16px;
-  font-weight: 500;
-  color: var(--foreground);
-}
-
-.drawer-nav-badge {
-  background-color: var(--primary);
-  color: var(--primary-foreground);
-  font-size: 12px;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 999px;
-}
-
-.drawer-footer {
-  padding: 24px;
-  border-top: 1px solid var(--border);
-}
-
-.drawer-footer-link {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--muted-foreground);
-  text-decoration: none;
-}
-
-.drawer-footer-bold {
-  color: var(--foreground);
-  font-weight: 600;
-}
-
-/* Drawer transitions */
-.drawer-overlay-fade-enter-active,
-.drawer-overlay-fade-leave-active {
-  transition: opacity 0.25s ease;
-}
-.drawer-overlay-fade-enter-from,
-.drawer-overlay-fade-leave-to {
-  opacity: 0;
-}
-
-.drawer-slide-enter-active,
-.drawer-slide-leave-active {
-  transition: transform 0.25s ease;
-}
-.drawer-slide-enter-from,
-.drawer-slide-leave-to {
-  transform: translateX(-100%);
-}
 </style>

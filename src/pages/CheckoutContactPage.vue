@@ -65,8 +65,8 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '../firebase/index.js'
 import { useCartStore } from '../stores/cart.js'
 import IconButton from '../components/IconButton.vue'
-
-const SHIPPING = 10
+import { formatPrice } from '../utils/format.js'
+import { SHIPPING } from '../utils/constants.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -81,10 +81,6 @@ const name = ref('')
 const phone = ref('')
 const error = ref('')
 const submitting = ref(false)
-
-function formatPrice(price) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(price ?? 0)
-}
 
 async function placeOrder() {
   error.value = ''
@@ -107,8 +103,9 @@ async function placeOrder() {
       orderNumber,
       createdAt: serverTimestamp(),
     })
-  } catch {
-    // order save failing should not block the success flow
+  } catch (err) {
+    console.error('Failed to save order to Firestore:', err)
+    // order save failing does not block the success flow — buyer still gets WhatsApp confirmation
   }
 
   cartStore.clearCart(storeId)
