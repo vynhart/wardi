@@ -25,7 +25,15 @@ Every screen must have an approved Banani design before implementation begins.
 
 Non-visual work (backend logic, bug fixes with no UI change, Firestore rules) is exempt.
 
-### 3. After completing a task
+### 3. Tests
+
+Every code change must be accompanied by tests.
+
+- Add or update unit tests in `src/tests/` to cover new or changed logic
+- Run the test suite (`npm run test`) and confirm all tests pass before considering a task done
+- Non-testable changes (CSS-only, config, documentation) are exempt
+
+### 4. After completing a task
 
 1. Mark the task as **Done** in the Notion task database
 2. Update `project/progress.md` to mirror the new state

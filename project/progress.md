@@ -46,6 +46,7 @@ _Last updated: 2026-04-04 (synced with Notion)_
 - [x] Order lifecycle management — accept/reject, then complete/cancel
 - [x] WhatsApp "Contact Buyer" CTA on seller's order detail page
 - [x] Seller profile page
+- [x] Product category — dropdown with existing categories + free-type new one
 
 ---
 
@@ -69,10 +70,12 @@ _Last updated: 2026-04-04 (synced with Notion)_
 - [ ] Buyer OTP login — buyer authenticates with phone number + OTP before placing an order
 - [ ] Buyer order list page — "My Orders" in the nav should link to an order list, not the cart
 - [ ] Product stock management — decrement stock when seller accepts an order
-- [ ] Multi-image support per product
+- [x] Multi-image support per product
 - [x] Image compression before upload
 - [ ] Firebase App Check — configure to protect backend from abuse
 - [ ] Push notifications for new orders
 - [ ] Seller analytics / dashboard metrics
 - [x] Staging deployment
 - [ ] PWA / installable app support
+- [ ] "Conversion" functionality
+- [ ] "Store Views" functionality

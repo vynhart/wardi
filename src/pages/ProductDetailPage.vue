@@ -1,14 +1,38 @@
 <template>
   <div class="page">
-    <!-- Hero image + back button -->
+    <!-- Hero image carousel + back button -->
     <div class="image-hero">
-      <img v-if="product?.imageUrl" class="hero-img" :src="toCdnUrl(product.imageUrl)" :alt="product?.name" />
+      <div
+        v-if="productImages.length"
+        class="carousel-track"
+        @touchstart="onTouchStart"
+        @touchend="onTouchEnd"
+      >
+        <img
+          v-for="(url, i) in productImages"
+          :key="url"
+          class="hero-img"
+          :class="{ active: i === activeImage }"
+          :src="toCdnUrl(url)"
+          :alt="product?.name"
+        />
+      </div>
       <div v-else class="hero-placeholder">
         <iconify-icon icon="lucide:image" style="font-size: 48px; color: var(--muted-foreground)" />
       </div>
       <button class="back-btn" @click="router.back()">
         <iconify-icon icon="lucide:chevron-left" style="font-size: 22px; color: var(--foreground)" />
       </button>
+      <!-- Dot indicators -->
+      <div v-if="productImages.length > 1" class="dot-row">
+        <span
+          v-for="(_, i) in productImages"
+          :key="i"
+          class="dot"
+          :class="{ 'dot--active': i === activeImage }"
+          @click="activeImage = i"
+        />
+      </div>
     </div>
 
     <!-- Content -->
@@ -63,7 +87,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from '../firebase/index.js'
@@ -81,6 +105,28 @@ const productId = route.params.productId
 
 const product = ref(null)
 const loading = ref(true)
+const activeImage = ref(0)
+let touchStartX = 0
+
+const productImages = computed(() => {
+  if (!product.value) return []
+  if (product.value.imageUrls?.length) return product.value.imageUrls
+  if (product.value.imageUrl) return [product.value.imageUrl]
+  return []
+})
+
+watch(product, () => { activeImage.value = 0 })
+
+function onTouchStart(e) {
+  touchStartX = e.touches[0].clientX
+}
+
+function onTouchEnd(e) {
+  const dx = e.changedTouches[0].clientX - touchStartX
+  if (Math.abs(dx) < 40) return
+  if (dx < 0 && activeImage.value < productImages.value.length - 1) activeImage.value++
+  else if (dx > 0 && activeImage.value > 0) activeImage.value--
+}
 
 onMounted(async () => {
   const snap = await getDoc(doc(db, 'stores', storeId, 'products', productId))
@@ -134,10 +180,47 @@ function goToCart() {
   overflow: hidden;
 }
 
+.carousel-track {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
 .hero-img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.hero-img.active {
+  opacity: 1;
+}
+
+.dot-row {
+  position: absolute;
+  bottom: 14px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.dot--active {
+  background-color: #fff;
 }
 
 .hero-placeholder {

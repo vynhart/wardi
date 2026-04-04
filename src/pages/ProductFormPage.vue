@@ -23,22 +23,30 @@
           @change="onFileSelected"
         />
         <div class="image-gallery">
-          <div v-if="form.imageUrl" class="uploaded-image-card">
-            <img :src="toCdnUrl(form.imageUrl)" alt="Product" />
-            <button class="remove-image-btn" @click="form.imageUrl = ''">
+          <div
+            v-for="(url, i) in form.imageUrls"
+            :key="url"
+            class="uploaded-image-card"
+          >
+            <img :src="toCdnUrl(url)" alt="Product" />
+            <button class="remove-image-btn" @click="removeImage(i)">
               <iconify-icon icon="lucide:x" style="font-size: 14px; color: #fff" />
             </button>
           </div>
-          <div v-else-if="uploading" class="image-upload-card uploading-card">
+          <div v-if="uploading" class="image-upload-card uploading-card">
             <iconify-icon icon="lucide:loader" class="spin-icon" style="font-size: 24px; color: var(--muted-foreground)" />
             <span class="add-photo-label">Uploading...</span>
           </div>
-          <button v-else class="image-upload-card" @click="fileInputRef.click()">
+          <button
+            v-else-if="form.imageUrls.length < 5"
+            class="image-upload-card"
+            @click="fileInputRef.click()"
+          >
             <iconify-icon icon="lucide:image-plus" style="font-size: 24px; color: var(--muted-foreground)" />
             <span class="add-photo-label">Add Photo</span>
           </button>
         </div>
-        <span class="helper-text">First image will be the cover.</span>
+        <span class="helper-text">First image will be the cover. Up to 5 photos.</span>
 
         <!-- Product Details -->
         <h2 class="section-title">Product Details</h2>
@@ -181,7 +189,7 @@ const form = ref({
   stock: '',
   description: '',
   category: '',
-  imageUrl: '',
+  imageUrls: [],
   visible: true,
 })
 
@@ -222,7 +230,7 @@ onMounted(async () => {
         stock: data.stock ?? '',
         description: data.description ?? '',
         category: data.category ?? '',
-        imageUrl: data.imageUrl ?? '',
+        imageUrls: data.imageUrls ?? (data.imageUrl ? [data.imageUrl] : []),
         visible: data.visible !== false,
       }
     }
@@ -258,16 +266,23 @@ function selectCategory(cat) {
   editingCategory.value = false
 }
 
+function removeImage(index) {
+  form.value.imageUrls.splice(index, 1)
+}
+
 async function onFileSelected(event) {
   const file = event.target.files?.[0]
   if (!file) return
+  if (form.value.imageUrls.length >= 5) return
   uploading.value = true
   error.value = ''
   try {
     const compressed = await compressImage(file)
     const path = `stores/${storeId}/products/${Date.now()}.jpg`
     await uploadBytes(storageRef(storage, path), compressed)
-    form.value.imageUrl = `https://storage.googleapis.com/${import.meta.env.VITE_FIREBASE_STORAGE_BUCKET}/${path}`
+    form.value.imageUrls.push(
+      `https://storage.googleapis.com/${import.meta.env.VITE_FIREBASE_STORAGE_BUCKET}/${path}`
+    )
   } catch (e) {
     error.value = 'Image upload failed. Please try again.'
   } finally {
@@ -290,7 +305,8 @@ async function submit() {
       stock: Number(form.value.stock) || 0,
       description: form.value.description.trim(),
       category: form.value.category.trim(),
-      imageUrl: form.value.imageUrl.trim(),
+      imageUrls: form.value.imageUrls,
+      imageUrl: form.value.imageUrls[0] ?? '',
       visible: form.value.visible,
       updatedAt: serverTimestamp(),
     }
