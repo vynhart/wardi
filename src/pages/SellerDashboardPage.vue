@@ -34,24 +34,6 @@
           </div>
           <div class="metric-value">{{ totalOrders }}</div>
         </div>
-        <div class="metric-card">
-          <div class="metric-header">
-            <span class="metric-title">Store Views</span>
-            <div class="metric-icon-wrapper">
-              <iconify-icon icon="lucide:eye" style="font-size: 16px; color: var(--foreground)" />
-            </div>
-          </div>
-          <div class="metric-value">0</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-header">
-            <span class="metric-title">Conversion</span>
-            <div class="metric-icon-wrapper">
-              <iconify-icon icon="lucide:trending-up" style="font-size: 16px; color: var(--foreground)" />
-            </div>
-          </div>
-          <div class="metric-value">0%</div>
-        </div>
       </section>
 
       <!-- Quick Actions -->

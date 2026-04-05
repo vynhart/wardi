@@ -51,10 +51,6 @@
             <span>Subtotal</span>
             <span class="value">{{ formatPrice(subtotal) }}</span>
           </div>
-          <div class="summary-row">
-            <span>Shipping</span>
-            <span class="value">{{ formatPrice(SHIPPING) }}</span>
-          </div>
           <div class="summary-divider"></div>
           <div class="summary-row total">
             <span>Total</span>
@@ -75,14 +71,12 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useCartStore } from '../stores/cart.js'
 import IconButton from '../components/IconButton.vue'
 import QtyControl from '../components/QtyControl.vue'
 import { toCdnUrl } from '../utils/storage.js'
 import { formatPrice } from '../utils/format.js'
-import { SHIPPING } from '../utils/constants.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -91,7 +85,7 @@ const storeId = route.params.storeId
 
 const items = cartStore.cartItems(storeId)
 const subtotal = cartStore.cartSubtotal(storeId)
-const total = computed(() => subtotal.value + SHIPPING)
+const total = subtotal
 
 function changeQty(productId, newQty) {
   cartStore.setQty(storeId, productId, newQty)

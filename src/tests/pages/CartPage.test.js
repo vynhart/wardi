@@ -54,12 +54,11 @@ describe('CartPage', () => {
     expect(wrapper.text()).toContain('$50.00')
   })
 
-  it('shows subtotal, shipping, and total in order summary', () => {
+  it('shows subtotal and total in order summary', () => {
     const product = { id: 'p1', name: 'Widget', price: 30 }
     const { wrapper } = mountPage([{ product, qty: 1 }])
     expect(wrapper.text()).toContain('$30.00') // subtotal
-    expect(wrapper.text()).toContain('$10.00') // shipping
-    expect(wrapper.text()).toContain('$40.00') // total
+    expect(wrapper.text()).not.toContain('Shipping')
   })
 
   it('calls setQty to increment when + is clicked', async () => {

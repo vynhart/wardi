@@ -72,9 +72,9 @@ describe('CheckoutContactPage', () => {
     expect(orderData.buyerName).toBe('Jane Smith')
     expect(orderData.buyerPhone).toBe('+1 555 000 1234')
     expect(orderData.status).toBe('pending')
-    expect(orderData.shipping).toBe(10)
+    expect(orderData.shipping).toBe(0)
     expect(orderData.subtotal).toBe(50)
-    expect(orderData.total).toBe(60)
+    expect(orderData.total).toBe(50)
   })
 
   it('clears cart and navigates to order-success on success', async () => {

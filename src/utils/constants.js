@@ -1,1 +1,1 @@
-export const SHIPPING = 10
+export const SHIPPING = 0
