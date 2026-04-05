@@ -271,9 +271,11 @@ function checkout() {
 /* Checkout footer */
 .checkout-footer {
   position: fixed;
-  left: 0;
-  right: 0;
+  left: 50%;
+  transform: translateX(-50%);
   bottom: 0;
+  width: 100%;
+  max-width: 430px;
   background-color: var(--background);
   padding: 16px 20px 24px;
   border-top: 1px solid var(--border);

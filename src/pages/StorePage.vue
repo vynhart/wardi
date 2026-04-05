@@ -373,9 +373,11 @@ async function handleSignOut() {
 /* Cart bottom sheet */
 .cart-sheet {
   position: fixed;
-  left: 0;
-  right: 0;
+  left: 50%;
+  transform: translateX(-50%);
   bottom: 0;
+  width: 100%;
+  max-width: 430px;
   background-color: var(--card);
   border-top-left-radius: 24px;
   border-top-right-radius: 24px;

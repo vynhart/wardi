@@ -752,10 +752,12 @@ async function submit() {
   z-index: 30;
   display: flex;
   align-items: flex-end;
+  justify-content: center;
 }
 
 .bottom-sheet {
   width: 100%;
+  max-width: 430px;
   background-color: var(--background);
   border-top-left-radius: 24px;
   border-top-right-radius: 24px;

@@ -388,10 +388,12 @@ function formatOrderDate(ts) {
   z-index: 50;
   display: flex;
   align-items: flex-end;
+  justify-content: center;
 }
 
 .sheet-panel {
   width: 100%;
+  max-width: 430px;
   background-color: var(--background);
   border-top-left-radius: 20px;
   border-top-right-radius: 20px;

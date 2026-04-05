@@ -52,11 +52,9 @@
 
     <div class="footer">
       <button class="primary-btn" @click="goToStore">Back to Store</button>
-      <button class="secondary-btn" @click="contactSeller">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M20.52 3.48A11.9 11.9 0 0 0 12.06 0C5.5 0 .16 5.34.16 11.9c0 2.1.55 4.16 1.6 5.98L0 24l6.3-1.65a11.93 11.93 0 0 0 5.75 1.46h.01c6.56 0 11.9-5.34 11.9-11.9 0-3.18-1.24-6.16-3.44-8.43ZM12.06 21.8h-.01a9.9 9.9 0 0 1-5.04-1.38l-.36-.21-3.74.98 1-3.64-.24-.37a9.87 9.87 0 0 1-1.51-5.28c0-5.46 4.44-9.9 9.91-9.9 2.64 0 5.12 1.02 6.98 2.9a9.8 9.8 0 0 1 2.9 7c0 5.46-4.44 9.9-9.89 9.9Zm5.43-7.42c-.3-.15-1.77-.87-2.05-.96-.27-.1-.47-.15-.67.15-.2.3-.77.96-.94 1.16-.17.2-.35.22-.65.07-.3-.15-1.25-.46-2.38-1.47-.88-.78-1.47-1.75-1.65-2.05-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.62-.92-2.22-.24-.58-.48-.5-.67-.5h-.57c-.2 0-.52.08-.8.37-.27.3-1.05 1.02-1.05 2.48s1.08 2.88 1.23 3.08c.15.2 2.12 3.24 5.14 4.54.72.31 1.28.5 1.72.64.72.23 1.38.2 1.9.12.58-.09 1.77-.72 2.02-1.42.25-.7.25-1.3.17-1.42-.07-.12-.27-.2-.57-.35Z" fill="var(--primary)" />
-        </svg>
-        Contact seller
+      <button class="contact-btn" @click="contactSeller">
+        <iconify-icon icon="lucide:message-circle" style="font-size: 18px" />
+        Contact Seller
       </button>
     </div>
   </div>
@@ -264,9 +262,11 @@ function contactSeller() {
 
 .footer {
   position: fixed;
-  left: 0;
-  right: 0;
+  left: 50%;
+  transform: translateX(-50%);
   bottom: 0;
+  width: 100%;
+  max-width: 430px;
   padding: 16px 20px 24px;
   background-color: var(--background);
   border-top: 1px solid var(--border);
@@ -290,17 +290,17 @@ function contactSeller() {
   cursor: pointer;
 }
 
-.secondary-btn {
+.contact-btn {
   width: 100%;
-  height: 56px;
+  height: 48px;
   border-radius: var(--radius-xl);
-  background-color: transparent;
-  color: var(--primary);
+  background-color: #25D366;
+  color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
 }
