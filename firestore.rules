@@ -18,10 +18,12 @@ service cloud.firestore {
       }
 
       // Orders — anyone can create (buyers aren't authenticated);
-      // only the store owner can read and update
+      // anyone can get a single order by ID (buyers viewing their own orders);
+      // only the store owner can list all orders or update them
       match /orders/{orderId} {
         allow create: if true;
-        allow read, update: if request.auth != null
+        allow get: if true;
+        allow list, update: if request.auth != null
                             && get(/databases/$(database)/documents/stores/$(storeId)).data.ownerUid == request.auth.uid;
       }
     }

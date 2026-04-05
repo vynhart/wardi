@@ -85,6 +85,11 @@ const routes = [
     component: () => import('../pages/OrderSuccessPage.vue'),
   },
   {
+    path: '/:storeId/my-orders',
+    name: 'buyer-orders',
+    component: () => import('../pages/BuyerOrdersPage.vue'),
+  },
+  {
     path: '/:storeId/manage/orders',
     name: 'seller-orders',
     component: () => import('../pages/SellerOrdersPage.vue'),

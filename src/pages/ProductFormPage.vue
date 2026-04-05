@@ -27,11 +27,21 @@
             v-for="(url, i) in form.imageUrls"
             :key="url"
             class="uploaded-image-card"
+            :class="{ dragging: draggingIndex === i }"
           >
             <img :src="toCdnUrl(url)" alt="Product" />
             <button class="remove-image-btn" @click="removeImage(i)">
               <iconify-icon icon="lucide:x" style="font-size: 14px; color: #fff" />
             </button>
+            <div class="image-card-overlay">
+              <span class="image-chip">{{ i === 0 ? 'Cover' : i + 1 }}</span>
+              <button
+                class="reorder-handle"
+                @pointerdown="onHandlePointerDown($event, i)"
+              >
+                <iconify-icon icon="lucide:grip-vertical" style="font-size: 16px; color: var(--foreground)" />
+              </button>
+            </div>
           </div>
           <div v-if="uploading" class="image-upload-card uploading-card">
             <iconify-icon icon="lucide:loader" class="spin-icon" style="font-size: 24px; color: var(--muted-foreground)" />
@@ -46,7 +56,7 @@
             <span class="add-photo-label">Add Photo</span>
           </button>
         </div>
-        <span class="helper-text">First image will be the cover. Up to 5 photos.</span>
+        <span class="helper-text">Drag images to reorder. First image will be the cover. Up to 5 photos.</span>
 
         <!-- Product Details -->
         <h2 class="section-title">Product Details</h2>
@@ -157,7 +167,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   doc,
@@ -202,6 +212,49 @@ const editingCategory = ref(false)
 const categoryDraft = ref('')
 const categoryInputRef = ref(null)
 const existingCategories = ref([])
+
+const draggingIndex = ref(null)
+const dragStartX = ref(0)
+const DRAG_THRESHOLD = 60
+
+function onHandlePointerDown(event, index) {
+  event.preventDefault()
+  draggingIndex.value = index
+  dragStartX.value = event.clientX
+  window.addEventListener('pointermove', onDragPointerMove, { passive: false })
+  window.addEventListener('pointerup', onDragPointerUp)
+  window.addEventListener('pointercancel', onDragPointerUp)
+}
+
+function onDragPointerMove(event) {
+  event.preventDefault()
+  if (draggingIndex.value === null) return
+  const delta = event.clientX - dragStartX.value
+  if (Math.abs(delta) < DRAG_THRESHOLD) return
+  const direction = delta > 0 ? 1 : -1
+  const from = draggingIndex.value
+  const to = from + direction
+  if (to < 0 || to >= form.value.imageUrls.length) return
+  const arr = [...form.value.imageUrls]
+  const [item] = arr.splice(from, 1)
+  arr.splice(to, 0, item)
+  form.value.imageUrls = arr
+  draggingIndex.value = to
+  dragStartX.value = event.clientX
+}
+
+function onDragPointerUp() {
+  draggingIndex.value = null
+  window.removeEventListener('pointermove', onDragPointerMove)
+  window.removeEventListener('pointerup', onDragPointerUp)
+  window.removeEventListener('pointercancel', onDragPointerUp)
+}
+
+onUnmounted(() => {
+  window.removeEventListener('pointermove', onDragPointerMove)
+  window.removeEventListener('pointerup', onDragPointerUp)
+  window.removeEventListener('pointercancel', onDragPointerUp)
+})
 
 onMounted(async () => {
   if (!authStore.user) {
@@ -408,15 +461,59 @@ async function submit() {
 }
 
 .uploaded-image-card {
-  min-width: 100px;
-  width: 100px;
-  height: 100px;
+  min-width: 120px;
+  width: 120px;
+  height: 120px;
   border-radius: var(--radius-md);
   background-color: var(--muted);
   border: 1px solid var(--border);
   flex-shrink: 0;
   position: relative;
   overflow: hidden;
+  transition: opacity 0.15s, transform 0.15s;
+}
+
+.uploaded-image-card.dragging {
+  opacity: 0.7;
+  transform: scale(0.96);
+}
+
+.image-card-overlay {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.image-chip {
+  background-color: var(--background);
+  color: var(--foreground);
+  border-radius: 999px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.reorder-handle {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background-color: var(--background);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: grab;
+  touch-action: none;
+}
+
+.reorder-handle:active {
+  cursor: grabbing;
 }
 
 .uploaded-image-card img {
@@ -440,9 +537,9 @@ async function submit() {
 }
 
 .image-upload-card {
-  min-width: 100px;
-  width: 100px;
-  height: 100px;
+  min-width: 120px;
+  width: 120px;
+  height: 120px;
   border: 2px dashed var(--border);
   border-radius: var(--radius-md);
   display: flex;

@@ -89,10 +89,8 @@
     <BuyerDrawer
       v-if="!isOwner"
       :open="buyerDrawerOpen"
-      :item-count="itemCount"
-      :has-cart-items="hasCartItems"
       @close="buyerDrawerOpen = false"
-      @go-to-cart="openCart"
+      @go-to-orders="openOrders"
       @contact-seller="contactSeller"
     />
   </div>
@@ -178,9 +176,9 @@ function goToCart() {
   router.push({ name: 'cart', params: { storeId } })
 }
 
-function openCart() {
+function openOrders() {
   buyerDrawerOpen.value = false
-  router.push({ name: 'cart', params: { storeId } })
+  router.push({ name: 'buyer-orders', params: { storeId } })
 }
 
 function contactSeller() {

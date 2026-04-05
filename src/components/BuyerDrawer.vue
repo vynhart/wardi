@@ -17,12 +17,11 @@
             <span class="drawer-nav-label">Catalog</span>
           </div>
         </button>
-        <button class="drawer-nav-item" @click="$emit('go-to-cart')">
+        <button class="drawer-nav-item" @click="$emit('go-to-orders')">
           <div class="drawer-nav-item-left">
             <iconify-icon icon="lucide:package" style="font-size: 20px; color: var(--muted-foreground)" />
             <span class="drawer-nav-label">My Orders</span>
           </div>
-          <span v-if="hasCartItems" class="drawer-nav-badge">{{ itemCount }} Active</span>
         </button>
         <button class="drawer-nav-item" @click="$emit('contact-seller')">
           <div class="drawer-nav-item-left">
@@ -43,11 +42,9 @@
 <script setup>
 defineProps({
   open: { type: Boolean, required: true },
-  itemCount: { type: Number, default: 0 },
-  hasCartItems: { type: Boolean, default: false },
 })
 
-defineEmits(['close', 'go-to-cart', 'contact-seller'])
+defineEmits(['close', 'go-to-orders', 'contact-seller'])
 </script>
 
 <style scoped>

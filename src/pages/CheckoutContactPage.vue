@@ -67,6 +67,7 @@ import { useCartStore } from '../stores/cart.js'
 import IconButton from '../components/IconButton.vue'
 import { formatPrice } from '../utils/format.js'
 import { SHIPPING } from '../utils/constants.js'
+import { saveOrderId } from '../utils/buyerOrders.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -92,7 +93,7 @@ async function placeOrder() {
   const orderNumber = 10000 + Math.floor(Date.now() % 90000)
 
   try {
-    await addDoc(collection(db, 'stores', storeId, 'orders'), {
+    const docRef = await addDoc(collection(db, 'stores', storeId, 'orders'), {
       buyerName: name.value.trim(),
       buyerPhone: phone.value.trim(),
       items: items.value.map((e) => ({ product: e.product, qty: e.qty })),
@@ -103,6 +104,7 @@ async function placeOrder() {
       orderNumber,
       createdAt: serverTimestamp(),
     })
+    saveOrderId(storeId, docRef.id)
   } catch (err) {
     console.error('Failed to save order to Firestore:', err)
     // order save failing does not block the success flow — buyer still gets WhatsApp confirmation

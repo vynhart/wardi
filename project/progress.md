@@ -1,6 +1,6 @@
 # Wardi — Progress Tracker
 
-_Last updated: 2026-04-04 (synced with Notion)_
+_Last updated: 2026-04-05 (synced with Notion)_
 
 ## Status Legend
 - [x] Done
@@ -52,7 +52,7 @@ _Last updated: 2026-04-04 (synced with Notion)_
 
 ## Testing
 
-- [x] Vitest unit test suite — 56 tests across 8 files (cart store, auth store, formatPrice, toCdnUrl, CheckoutContactPage, SearchPage, CartPage, QtyControl)
+- [x] Vitest unit test suite — 78 tests across 11 files (cart store, auth store, formatPrice, toCdnUrl, buyerOrders, CheckoutContactPage, SearchPage, CartPage, QtyControl, ProductFormPage, BuyerOrdersPage)
 - [x] Firebase and localStorage fully mocked — tests run offline
 
 ---
@@ -68,10 +68,11 @@ _Last updated: 2026-04-04 (synced with Notion)_
 ## Outstanding / Backlog
 
 - [ ] Buyer OTP login — buyer authenticates with phone number + OTP before placing an order
-- [ ] Buyer order list page — "My Orders" in the nav should link to an order list, not the cart
+- [x] Buyer order list page — "My Orders" in the nav links to order history (`/:storeId/my-orders`)
 - [ ] Product stock management — decrement stock when seller accepts an order
 - [x] Multi-image support per product
 - [x] Image compression before upload
+- [x] Drag-to-reorder images in product form
 - [ ] Firebase App Check — configure to protect backend from abuse
 - [ ] Push notifications for new orders
 - [ ] Seller analytics / dashboard metrics
